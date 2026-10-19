@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>百人一首 競技かるた対戦＆学習アプリ（全札ひらがな修正版）</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #8b262a; /* 朱色 */
+      --secondary-color: #1c3d5a; /* 紺碧 */
+      --accent-color: #d4a359; /* 黄金 */
+      --bg-color: #f7f3e8; /* 和紙風 */
+      --card-bg: #fffdf9;
+      --tatami-green: #5a7d57;
+      --tatami-border: #3b5339;
+      --text-dark: #2c2523;
+      --p1-color: #1e88e5; /* 1P 青 */
+      --p2-color: #e53935; /* 2P 赤 */
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      font-family: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+      background-color: var(--bg-color);
+      color: var(--text-dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    ruby {
+      ruby-align: center;
+    }
+    rt {
+      font-size: 0.44em;
+      color: #555;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-weight: normal;
+      line-height: 1;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary-color), #5c181b);
+      color: #fff;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 10;
+    }
+
+    .app-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+
+    .audio-toggle-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #fff;
+      padding: 5px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .audio-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    .title-badge {
+      background-color: var(--accent-color);
+      color: #000;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 0.8rem;
+    }
+
+    nav {
+      background-color: var(--secondary-color);
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      padding: 6px;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: #e0e8f0;
+      padding: 8px 16px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .nav-btn.active, .nav-btn:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    main {
+      flex: 1;
+      padding: 12px;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      gap: 15px;
+      height: 100%;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    .card-panel {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid #e2d9cc;
+    }
+
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 6px;
+      margin-bottom: 15px;
+      color: var(--primary-color);
+    }
+
+    .setting-group {
+      margin-bottom: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .setting-group label {
+      font-weight: bold;
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .option-card {
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafafa;
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+
+    .option-card:hover {
+      border-color: var(--accent-color);
+      background: #fffdf5;
+    }
+
+    .option-card.selected {
+      border-color: var(--primary-color);
+      background-color: #fdf2f2;
+      color: var(--primary-color);
+      font-weight: bold;
+    }
+
+    .start-btn {
+      background: linear-gradient(135deg, #d32f2f, #9a0007);
+      color: #fff;
+      border: none;
+      padding: 14px 28px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(154, 0, 7, 0.3);
+      width: 100%;
+      margin-top: 10px;
+      transition: transform 0.1s, box-shadow 0.2s;
+      font-family: 'Shippori Mincho', serif;
+    }
+
+    .start-btn:active {
+      transform: scale(0.98);
+    }
+
+    .tatami-board {
+      background-color: var(--tatami-green);
+      border: 8px solid var(--tatami-border);
+      border-radius: 8px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.3), var(--shadow);
+      min-height: 560px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tatami-board.pvp-fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 99999 !important;
+      border-radius: 0 !important;
+      border-width: 4px !important;
+      padding: 6px !important;
+      margin: 0 !important;
+      max-width: none !important;
+    }
+
+    .pvp-half-zone {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 6px;
+      background: rgba(0, 0, 0, 0.12);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pvp-half-zone.rotate-p2 {
+      transform: rotate(180deg);
+      border: 2px dashed rgba(225, 112, 85, 0.5);
+    }
+
+    .pvp-half-zone.p1-zone {
+      border: 2px dashed rgba(9, 132, 227, 0.5);
+    }
+
+    .pvp-header-zone {
+      background: rgba(229, 57, 53, 0.9);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 0.9rem;
+    }
+
+    .pvp-footer-zone {
+      background: rgba(30, 136, 229, 0.9);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 0.9rem;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      padding: 8px 15px;
+      border-radius: 6px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+
+    .quit-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: bold;
+      transition: background 0.2s;
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+
+    .quit-btn:hover {
+      background: rgba(211, 47, 47, 0.8);
+    }
+
+    .score-box {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 1.05rem;
+    }
+
+    .reading-display {
+      background: #fff8eb;
+      border: 2px solid var(--accent-color);
+      border-radius: 8px;
+      padding: 6px 10px;
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: bold;
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      letter-spacing: 1px;
+      color: #333;
+    }
+
+    .cards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 6px;
+      flex: 1;
+      align-content: center;
+      overflow-y: auto;
+      padding: 4px;
+    }
+
+    .karuta-card {
+      background: var(--card-bg);
+      border: 2px solid #333;
+      border-radius: 5px;
+      min-height: 110px;
+      height: 100%;
+      max-height: 140px;
+      padding: 4px 2px;
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 2px 3px 6px rgba(0,0,0,0.2);
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+      background-image: radial-gradient(#f0e6d2 1px, transparent 0);
+      background-size: 8px 8px;
+      touch-action: manipulation;
+      overflow: hidden;
+    }
+
+    .karuta-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 2px 5px 10px rgba(0,0,0,0.3);
+    }
+
+    .karuta-card.taken {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .card-text {
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      font-size: clamp(0.62rem, 1.6vh + 0.5vw, 0.80rem);
+      letter-spacing: 0px;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.15;
+      height: 100%;
+      max-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .countdown-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      color: #fff;
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+
+    .countdown-number {
+      font-size: 7rem;
+      font-weight: 800;
+      color: var(--accent-color);
+      text-shadow: 0 0 20px rgba(212, 163, 89, 0.8), 0 0 40px #fff;
+      animation: countPulse 0.9s infinite;
+    }
+
+    .countdown-label {
+      font-size: 1.5rem;
+      letter-spacing: 2px;
+      margin-top: 10px;
+    }
+
+    @keyframes countPulse {
+      0% { transform: scale(0.6); opacity: 0.3; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.9; }
+    }
+
+    .get-toast {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #fff;
+      pointer-events: none;
+      z-index: 500;
+      animation: popFade 0.8s forwards;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+
+    .get-toast.p1 { background: var(--p1-color); }
+    .get-toast.p2 { background: var(--p2-color); }
+
+    @keyframes popFade {
+      0% { opacity: 0; transform: translate(-50%, -40%) scale(0.7); }
+      30% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+      70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -60%) scale(0.9); }
+    }
+
+    .dictionary-search {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .poem-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .poem-item {
+      border: 1px solid #e0d8cb;
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .poem-item:hover {
+      background-color: #fdf8ef;
+    }
+
+    .poem-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .poem-number {
+      font-weight: bold;
+      color: var(--primary-color);
+      font-size: 0.9rem;
+    }
+
+    .poem-kimariji {
+      background-color: #e8f0fe;
+      color: #1a73e8;
+      font-size: 0.8rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+
+    .poem-text {
+      font-size: 1.05rem;
+      font-weight: bold;
+      margin-bottom: 6px;
+      line-height: 1.6;
+    }
+
+    .poem-translation {
+      font-size: 0.88rem;
+      color: #444;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      line-height: 1.5;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100000;
+      padding: 15px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .close-modal-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      border: none;
+      background: #eee;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .creator-credit {
+      position: fixed;
+      bottom: 8px;
+      right: 12px;
+      font-size: 0.75rem;
+      color: #333;
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 9999;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      letter-spacing: 1px;
+    }
+
+    @media (max-width: 600px) {
+      .cards-container {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 4px;
+      }
+      .karuta-card {
+        min-height: 95px;
+      }
+      .app-title {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ヘッダー -->
+  <header id="main-header">
+    <div class="app-title">
+      <span>🎴</span> 百人一首 競技かるた
+    </div>
+    <div class="header-controls">
+      <button class="audio-toggle-btn" id="audio-toggle-btn" onclick="toggleAudio()">🔊 音声: ON</button>
+      <span class="title-badge" id="current-title-badge">かるた初級者</span>
+    </div>
+  </header>
+
+  <!-- ナビゲーション -->
+  <nav id="main-nav">
+    <button class="nav-btn active" onclick="switchTab('game-tab', this)">対戦 / 特訓</button>
+    <button class="nav-btn" onclick="switchTab('dict-tab', this)">全100首 歌鑑賞</button>
+    <button class="nav-btn" onclick="switchTab('review-tab', this)">苦手札ノート</button>
+    <button class="nav-btn" onclick="switchTab('trophy-tab', this)">称号＆戦績</button>
+  </nav>
+
+  <!-- メイン表示領域 -->
+  <main>
+
+    <!-- 対戦/特訓ロビー＆ゲーム画面 -->
+    <section id="game-tab" class="screen active">
+      
+      <!-- 設定パネル -->
+      <div id="setup-panel" class="card-panel">
+        <div class="panel-title">対戦モード＆条件設定</div>
+        
+        <div class="setting-group">
+          <label>対戦形式</label>
+          <div class="option-grid">
+            <div class="option-card selected" onclick="selectGameMode('cpu', this)">
+              <div>CPU対戦</div>
+              <small style="font-size:0.75rem; color:#666;">一人で練習・挑戦</small>
+            </div>
+            <div class="option-card" onclick="selectGameMode('pvp', this)">
+              <div>1画面 2人対戦 (全画面上下対面)</div>
+              <small style="font-size:0.75rem; color:#666;">向かい合って勝負！</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-group" id="cpu-level-group">
+          <label>CPUの強さ</label>
+          <div class="option-grid">
+            <div class="option-card selected" onclick="selectCpu(0, this)">
+              <div>初級</div>
+              <small style="font-size:0.75rem; color:#666;">詠み終わり後ゆっくり</small>
+            </div>
+            <div class="option-card" onclick="selectCpu(1, this)">
+              <div>中級</div>
+              <small style="font-size:0.75rem; color:#666;">標準スピード</small>
+            </div>
+            <div class="option-card" onclick="selectCpu(2, this)">
+              <div>上級</div>
+              <small style="font-size:0.75rem; color:#666;">決まり字即反応</small>
+            </div>
+            <div class="option-card" onclick="selectCpu(3, this)">
+              <div>鬼級（永世名人）</div>
+              <small style="font-size:0.75rem; color:#666;">神速の反応</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label>出題テーマ（決まり字特化対応）</label>
+          <div class="option-grid">
+            <div class="option-card selected" onclick="selectTheme('all', this)">
+              <div>全100首</div>
+              <small style="font-size:0.75rem; color:#666;">総合勝負</small>
+            </div>
+            <div class="option-card" onclick="selectTheme('kimari1', this)">
+              <div>一字決まり（7首）</div>
+              <small style="font-size:0.75rem; color:#666;">む・す・め・ふ・さ・せ・ほ</small>
+            </div>
+            <div class="option-card" onclick="selectTheme('kimari2', this)">
+              <div>二字決まり（42首）</div>
+              <small style="font-size:0.75rem; color:#666;">競技かるたの基本</small>
+            </div>
+            <div class="option-card" onclick="selectTheme('love', this)">
+              <div>恋の歌</div>
+              <small style="font-size:0.75rem; color:#666;">切ない恋心</small>
+            </div>
+            <div class="option-card" onclick="selectTheme('season', this)">
+              <div>四季の歌</div>
+              <small style="font-size:0.75rem; color:#666;">自然と季節</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label>1試合の取札枚数</label>
+          <div class="option-grid">
+            <div class="option-card selected" onclick="selectCardCount(6, this)">6枚</div>
+            <div class="option-card" onclick="selectCardCount(12, this)">12枚</div>
+            <div class="option-card" onclick="selectCardCount(20, this)">20枚</div>
+            <div class="option-card" onclick="selectCardCount(50, this)">50枚</div>
+            <div class="option-card" onclick="selectCardCount(100, this)">100枚（全札）</div>
+          </div>
+        </div>
+
+        <button class="start-btn" onclick="startGame()">試合開始！</button>
+      </div>
+
+      <!-- 畳対戦盤面 -->
+      <div id="play-panel" class="tatami-board" style="display: none;">
+        
+        <!-- カウントダウンオーバーレイ（初期値3秒） -->
+        <div id="countdown-overlay" class="countdown-overlay" style="display: none;">
+          <div class="countdown-label">試合開始まで</div>
+          <div class="countdown-number" id="countdown-number">3</div>
+        </div>
+
+        <!-- PVP モード用 (上下2画面対面配置) -->
+        <div id="pvp-p2-zone" class="pvp-half-zone rotate-p2" style="display:none;">
+          <div class="pvp-header-zone">
+            <div style="font-weight:bold;">🔴 プレイヤー2 (相手)</div>
+            <div>得点: <strong id="p2-score-display" style="font-size:1.2rem; color:#fff;">0</strong></div>
+            <button class="quit-btn" onclick="quitGame()">↩ 中断</button>
+          </div>
+          <div class="reading-display" id="p2-reading-area">「試合開始を待っています」</div>
+          <div class="cards-container" id="p2-cards-board"></div>
+        </div>
+
+        <div id="pvp-p1-zone" class="pvp-half-zone p1-zone" style="display:none;">
+          <div class="pvp-footer-zone">
+            <div style="font-weight:bold;">🔵 プレイヤー1 (自分)</div>
+            <div>得点: <strong id="p1-score-display" style="font-size:1.2rem; color:#fff;">0</strong></div>
+            <button class="quit-btn" onclick="quitGame()">↩ 中断</button>
+          </div>
+          <div class="reading-display" id="p1-reading-area">「試合開始を待っています」</div>
+          <div class="cards-container" id="p1-cards-board"></div>
+        </div>
+
+        <!-- CPU モード用 -->
+        <div id="cpu-container" style="display:flex; flex-direction:column; gap:10px; width:100%; height:100%;">
+          <div id="normal-status-bar" class="status-bar">
+            <div class="score-box">
+              <span>あなた: <strong id="player-score" style="color:#ffeb3b; font-size:1.2rem;">0</strong></span>
+              <span>vs</span>
+              <span>CPU: <strong id="cpu-score" style="color:#ff8a80; font-size:1.2rem;">0</strong></span>
+            </div>
+            <div id="game-progress" style="font-size:0.88rem;">残り: 6/6</div>
+            <button class="quit-btn" onclick="quitGame()">↩ 中断</button>
+          </div>
+
+          <div class="reading-display" id="reading-area">「試合開始を待っています」</div>
+          <div class="cards-container" id="cards-board"></div>
+        </div>
+
+        <!-- 得点ポップアップ用領域 -->
+        <div id="toast-container"></div>
+
+      </div>
+
+    </section>
+
+    <!-- 歌鑑賞・解説辞書 -->
+    <section id="dict-tab" class="screen">
+      <div class="card-panel">
+        <div class="panel-title">小倉百人一首 全100首 鑑賞・解説辞典（ルビ対応）</div>
+        <div class="dictionary-search">
+          <input type="text" id="dict-search" class="search-input" placeholder="歌番号、作者名、決まり字、歌の言葉で検索..." oninput="filterDictionary()">
+        </div>
+        <div class="poem-list" id="dict-list"></div>
+      </div>
+    </section>
+
+    <!-- 苦手札ノート -->
+    <section id="review-tab" class="screen">
+      <div class="card-panel">
+        <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>苦手札（お手つき・取られた札）</span>
+          <button onclick="clearReviewList()" style="font-size:0.8rem; padding:4px 10px; background:#d32f2f; color:#fff; border:none; border-radius:4px; cursor:pointer;">リストをクリア</button>
+        </div>
+        <p style="font-size:0.9rem; color:#666; margin-bottom:15px; font-family:'Zen Maru Gothic';">
+          試合中に誤タップした札や、相手に取られた札が自動登録されます。反復復習に活用しましょう。
+        </p>
+        <div class="poem-list" id="review-list"></div>
+      </div>
+    </section>
+
+    <!-- 称号＆戦績 -->
+    <section id="trophy-tab" class="screen">
+      <div class="card-panel">
+        <div class="panel-title">獲得称号＆プレイヤー戦績</div>
+        <div style="margin-bottom: 20px; font-family: 'Zen Maru Gothic';">
+          <p>通算対戦数: <strong id="stat-matches">0</strong> 試合 | 通算勝利数: <strong id="stat-wins">0</strong> 勝</p>
+          <p>平均獲得スピード: <strong id="stat-avg-speed">0.00</strong> 秒</p>
+        </div>
+        <div class="panel-title" style="font-size:1rem;">称号一覧（クリックで装着）</div>
+        <div class="option-grid" id="titles-grid"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 歌の詳細モーダル -->
+  <div class="modal-overlay" id="poem-modal">
+    <div class="modal-content">
+      <button class="close-modal-btn" onclick="closeModal()">✕</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <div class="creator-credit">作成者: t-suzuki</div>
+
+  <script>
+    /* 小倉百人一首 全100首 データベース（取札全ひらがな対応・表記統一版） */
+    const POEM_DATABASE = [
+      { id: 1, kimariji: "あきの", upper: "<ruby>秋<rt>あき</rt></ruby>の<ruby>田<rt>た</rt></ruby>の <ruby>刈庵<rt>かりほ</rt></ruby>の<ruby>庵<rt>いお</rt></ruby>の <ruby>苫<rt>とま</rt></ruby>をあらみ", lower: "わが衣手は 露にぬれつつ", author: "<ruby>天智天皇<rt>てんじてんのう</rt></ruby>", upperPlain: "秋の田の 刈庵の庵の 苫をあらみ", lowerPlain: "わが衣手は 露にぬれつつ", lowerKana: "わがころもでは つゆにぬれつつ", upperKana: "あきのたの かりほのいおの とまをあらみ", trans: "秋の田んぼのわら小屋の屋根の編み目が粗いので、私の着物の袖は夜露に濡れ続けている。", technique: "倒置法", category: "season" },
+      { id: 2, kimariji: "はるす", upper: "<ruby>春<rt>はる</rt></ruby>すぎて <ruby>夏<rt>なつ</rt></ruby><ruby>来<rt>き</rt></ruby>にけらし <ruby>白妙<rt>しろたえ</rt></ruby>の", lower: "衣ほすてふ 天の香具山", author: "<ruby>持統天皇<rt>じとうてんのう</rt></ruby>", upperPlain: "春すぎて 夏来にけらし 白妙の", lowerPlain: "衣ほすてふ 天の香具山", lowerKana: "ころもほすてふ あまのかぐやま", upperKana: "はるすぎて なつきにけらし しろたえの", trans: "春が過ぎて夏が来たらしい。真っ白な衣が干してあるという天の香具山に。", technique: "視覚的色彩対比", category: "season" },
+      { id: 3, kimariji: "あし", upper: "あしびきの <ruby>山鳥<rt>やまどり</rt></ruby>の<ruby>尾<rt>お</rt></ruby>の しだり<ruby>尾<rt>お</rt></ruby>の", lower: "ながながし夜を ひとりかも寝む", author: "<ruby>柿本人麻呂<rt>かきのもとのひとまろ</rt></ruby>", upperPlain: "あしびきの 山鳥の尾の しだり尾の", lowerPlain: "ながながし夜を ひとりかも寝む", lowerKana: "ながながしよを ひとりかもねむ", upperKana: "あしびきの やまどりのおの しだりおの", trans: "山鳥の垂れ下がった長い尾のように、この長い長い夜を私はたった一人で寝るのだろうか。", technique: "枕詞（あしびきの）", category: "love" },
+      { id: 4, kimariji: "たご", upper: "<ruby>田子<rt>たご</rt></ruby>の<ruby>浦<rt>うら</rt></ruby>に うち<ruby>出<rt>で</rt></ruby>でてみれば <ruby>白妙<rt>しろたえ</rt></ruby>の", lower: "富士の高嶺に 雪は降りつつ", author: "<ruby>山部赤人<rt>やまべのあかひと</rt></ruby>", upperPlain: "田子の浦に うち出でてみれば 白妙の", lowerPlain: "富士の高嶺に 雪は降りつつ", lowerKana: "ふじのたかねに ゆきはふりつつ", upperKana: "たごのうらに うちいでてみれば しろたえの", trans: "田子の浦の海岸に出て見渡すと、富士の雄大な嶺に真っ白な雪が美しく降り積もっている。", technique: "叙景歌", category: "season" },
+      { id: 5, kimariji: "おく", upper: "<ruby>奥山<rt>おくやま</rt></ruby>に <ruby>紅葉<rt>もみじ</rt></ruby>ふみ分け <ruby>鳴<rt>な</rt></ruby>く<ruby>鹿<rt>しか</rt></ruby>の", lower: "声きく時ぞ 秋は悲しき", author: "<ruby>猿丸太夫<rt>さるまるだゆう</rt></ruby>", upperPlain: "奥山に 紅葉ふみ分け 鳴く鹿の", lowerPlain: "声きく時ぞ 秋は悲しき", lowerKana: "こえきくときぞ あきはかなしき", upperKana: "おくやまに もみじふみ分け なくしかの", trans: "人里離れた奥山で、散った紅葉を踏み分けながら妻を慕って鳴く鹿の声を聞く時、秋の寂しさが切なく身に沁みる。", technique: "視覚と聴覚の対比", category: "season" },
+      { id: 6, kimariji: "かさ", upper: "かささぎの <ruby>渡<rt>わた</rt></ruby>せる<ruby>橋<rt>はし</rt></ruby>に おく<ruby>霜<rt>しも</rt></ruby>の", lower: "白きをみれば 夜ぞふけにける", author: "<ruby>中納言家持<rt>ちゅうなごんやかもち</rt></ruby>", upperPlain: "かささぎの 渡せる橋に おく霜の", lowerPlain: "白きをみれば 夜ぞふけにける", lowerKana: "しろきをみれば よぞふけにける", upperKana: "かささぎの わたせるはしに おくしもの", trans: "七夕にカササギが架けるという橋のように見える宮中の階段。そこに降りた真っ白な霜を見ると夜もすっかり更けたと感じる。", technique: "見立て", category: "season" },
+      { id: 7, kimariji: "あまの", upper: "<ruby>天<rt>あま</rt></ruby>の<ruby>原<rt>はら</rt></ruby> ふりさけ<ruby>見<rt>み</rt></ruby>れば <ruby>春日<rt>かすが</rt></ruby>なる", lower: "三笠の山に 出でし月かも", author: "<ruby>阿倍仲麻呂<rt>あべのなかまろ</rt></ruby>", upperPlain: "天の原 ふりさけ見れば 春日なる", lowerPlain: "三笠の山に 出でし月かも", lowerKana: "みかさのやまに いでしつきかも", upperKana: "あまのはら ふりさけみれば かすがなる", trans: "大空を仰ぎ見ると月が出ている。あれはかつて故郷の春日にある三笠山に出ていた月と同じなのだなあ。", technique: "望郷の念", category: "season" },
+      { id: 8, kimariji: "わがい", upper: "わが<ruby>庵<rt>いお</rt></ruby>は <ruby>都<rt>みやこ</rt></ruby>のたつみ しかぞ<ruby>住<rt>す</rt></ruby>む", lower: "世をうじ山と 人はいうなり", author: "<ruby>喜撰法師<rt>きせんほうし</rt></ruby>", upperPlain: "わが庵は 都のたつみ しかぞ住む", lowerPlain: "世をうじ山と 人はいうなり", lowerKana: "よをうじやまと ひとはいふなり", upperKana: "わがいおは みやこのたつみ しかぞすむ", trans: "私の庵は都の東南にあり、心安らかに住んでいる。だが世間の人は世を辛く思って逃げ込んだ宇治山だと呼んでいるようだ。", technique: "掛詞（宇治/憂し）", category: "misc" },
+      { id: 9, kimariji: "はなの", upper: "<ruby>花<rt>はな</rt></ruby>の<ruby>色<rt>いろ</rt></ruby>は うつりにけりな いたづらに", lower: "わが身世にふる ながめせしまに", author: "<ruby>小野小町<rt>おののこまち</rt></ruby>", upperPlain: "花の色は うつりにけりな いたづらに", lowerPlain: "わが身世にふる ながめせしまに", lowerKana: "わがみよにふる ながめせしまに", upperKana: "はなのいろは うつりにけりな いたづらに", trans: "桜の花の色はむなしくあせてしまった。長雨が降っている間に。私の容姿も衰えてしまった、物思いに沈んでいる間に。", technique: "掛詞（長雨/眺め）", category: "love" },
+      { id: 10, kimariji: "これ", upper: "これやこの <ruby>行<rt>ゆ</rt></ruby>くも<ruby>帰<rt>かえ</rt></ruby>るも わかれては", lower: "知るも知らぬも あふ坂の関", author: "<ruby>蝉丸<rt>せみまる</rt></ruby>", upperPlain: "これやこの 行くも帰るも わかれては", lowerPlain: "知るも知らぬも あふ坂の関", lowerKana: "しるもしらぬも あふさかのせき", upperKana: "これやこの ゆくもかえるも わかれては", trans: "これがあの、行く人も帰る人も、知人とも見知らぬ人とも、出会っては別れるという逢坂の関なのだなあ。", technique: "対句表現", category: "misc" },
+      { id: 11, kimariji: "わたのはらや", upper: "わたの<ruby>原<rt>はら</rt></ruby> <ruby>八十島<rt>やそしま</rt></ruby>かけて <ruby>漕<rt>こ</rt></ruby>ぎ<ruby>出<rt>で</rt></ruby>でぬと", lower: "人にはつげよ あまの釣船", author: "<ruby>参議篁<rt>さんぎたかむら</rt></ruby>", upperPlain: "わたの原 八十島かけて 漕ぎ出でぬと", lowerPlain: "人にはつげよ あまの釣船", lowerKana: "ひとにはつげよ あまのつりぶね", upperKana: "わたのはら やそしまかけて こぎいでぬと", trans: "広い海原へ数多くの島を目指して漕ぎ出していったと、都の人に伝えておくれ、漁師の釣り船よ。", technique: "擬人法", category: "misc" },
+      { id: 12, kimariji: "あまつ", upper: "<ruby>天<rt>あま</rt></ruby>つ<ruby>風<rt>かぜ</rt></ruby> <ruby>雲<rt>くも</rt></ruby>の<ruby>通<rt>かよ</rt></ruby>ひ<ruby>路<rt>じ</rt></ruby> 吹きとぢよ", lower: "乙女の姿 しばしとどめむ", author: "<ruby>僧正遍昭<rt>そうじょうへんじょう</rt></ruby>", upperPlain: "天つ風 雲の通ひ路 吹きとぢよ", lowerPlain: "乙女の姿 しばしとどめむ", lowerKana: "おとめのすがた しばしとどめむ", upperKana: "あまつかぜ くものかよひじ ふきとぢよ", trans: "空吹く風よ、天女が帰る雲の通り道を吹き閉ざしておくれ。美しく舞う乙女の姿をもうしばらく留めておきたいのだ。", technique: "見立て", category: "season" },
+      { id: 13, kimariji: "つく", upper: "<ruby>筑波嶺<rt>つくばね</rt></ruby>の <ruby>峰<rt>みね</rt></ruby>より<ruby>落<rt>お</rt></ruby>つる みなの<ruby>川<rt>かわ</rt></ruby>", lower: "恋ぞつもりて 淵となりぬる", author: "<ruby>陽成院<rt>ようぜいいん</rt></ruby>", upperPlain: "筑波嶺の 峰より落つる みなの川", lowerPlain: "恋ぞつもりて 淵となりぬる", lowerKana: "こひぞつもりて ふちとなりぬる", upperKana: "つくばねの みねよりおつる みなのかわ", trans: "筑波山の峰から流れ落ちるみなの川が次第に深い淵となるように、私の恋心も深くなり積もっている。", technique: "比喩", category: "love" },
+      { id: 14, kimariji: "みち", upper: "<ruby>陸奥<rt>みちのく</rt></ruby>の しのぶもじずり 誰ゆゑに", lower: "乱れそめにし われならなくに", author: "<ruby>河原左大臣<rt>かわらのさだいじん</rt></ruby>", upperPlain: "陸奥の しのぶもじずり 誰ゆゑに", lowerPlain: "乱れそめにし われならなくに", lowerKana: "みだれそめにし われならなくに", upperKana: "みちのくの しのぶもじずり たれゆえに", trans: "信夫の乱れ染め模様のように乱れる私の心は、誰のせいでしょう。私のせいではないのに（あなたのせいなのに）。", technique: "序詞", category: "love" },
+      { id: 15, kimariji: "きみがためは", upper: "<ruby>君<rt>きみ</rt></ruby>がため <ruby>春<rt>はる</rt></ruby>の<ruby>野<rt>の</rt></ruby>に<ruby>出<rt>で</rt></ruby>て <ruby>若菜<rt>わかな</rt></ruby><ruby>摘<rt>つ</rt></ruby>む", lower: "わが衣手に 雪は降りつつ", author: "<ruby>光孝天皇<rt>こうこうてんのう</rt></ruby>", upperPlain: "君がため 春の野に出でて 若菜摘む", lowerPlain: "わが衣手に 雪は降りつつ", lowerKana: "わがころもでに ゆきはふりつつ", upperKana: "きみがため はるののにいでて わかなつむ", trans: "あなたのために春の野原に出て若菜を摘んでいる私の着物の袖に、雪がしきりに降りかかってくることだ。", technique: "誠実な真心", category: "season" },
+      { id: 16, kimariji: "たち", upper: "<ruby>立<rt>た</rt></ruby>ち<ruby>別<rt>わか</rt></ruby>れ いなばの<ruby>山<rt>やま</rt></ruby>の <ruby>峰<rt>みね</rt></ruby>に<ruby>生<rt>お</rt></ruby>ふる", lower: "まつとし聞かば 今かえり来む", author: "<ruby>中納言行平<rt>ちゅうなごんゆきひら</rt></ruby>", upperPlain: "立ち別れ いなばの山の 峰に生ふる", lowerPlain: "まつとし聞かば 今かえり来む", lowerKana: "まつとしきかば いまかへりこむ", upperKana: "たちわかれ いなばのやまの みねにおふる", trans: "あなたとお別れして因幡の国へ行きますが、因幡の因幡山に生える松のように、あなたが私を「待つ」と聞いたらすぐに戻ってきましょう。", technique: "掛詞（松/待つ）", category: "love" },
+      { id: 17, kimariji: "ちは", upper: "ちはやぶる <ruby>神代<rt>かみよ</rt></ruby>もきかず <ruby>竜田川<rt>たつたがわ</rt></ruby>", lower: "からくれないに 水くくるとは", author: "<ruby>在原業平朝臣<rt>ありわらのなりひらあそん</rt></ruby>", upperPlain: "ちはやぶる 神代もきかず 竜田川", lowerPlain: "からくれないに 水くくるとは", lowerKana: "からくれないに みづくくるとは", upperKana: "ちはやぶる かみよもきかず たつたがわ", trans: "不思議なことばかりの神代の時代にも聞いたことがない。竜田川が紅葉で鮮やかな真っ赤に水をくくり染めにするとは。", technique: "枕詞", category: "season" },
+      { id: 18, kimariji: "す", upper: "<ruby>住<rt>す</rt></ruby>の<ruby>江<rt>え</rt></ruby>の <ruby>岸<rt>きし</rt></ruby>による<ruby>波<rt>なみ</rt></ruby> よるさえや", lower: "夢の通ひ路 人目よくらむ", author: "<ruby>藤原敏行朝臣<rt>ふじわらのとしゆきあそん</rt></ruby>", upperPlain: "住の江の 岸による波 よるさえや", lowerPlain: "夢の通ひ路 人目よくらむ", lowerKana: "ゆめのかよひぢ ひとめよくらむ", upperKana: "すみのえの きしによるなみ よるさえや", trans: "住の江の岸に寄せる波の「寄る」ではないが、夜の夢の中の通い路でさえ、どうしてあなたは人目を避けるのだろうか。", technique: "一字決まり（す）", category: "love" },
+      { id: 19, kimariji: "なにわが", upper: "<ruby>難波潟<rt>なにわがた</rt></ruby> <ruby>短<rt>みじか</rt></ruby>き<ruby>芦<rt>あし</rt></ruby>の ふしのまも", lower: "逢はでこの世を 過ごしてよとや", author: "<ruby>伊勢<rt>いせ</rt></ruby>", upperPlain: "難波潟 短き芦の ふしのまも", lowerPlain: "逢はでこの世を 過ごしてよとや", lowerKana: "あはでこのよを すごしてよとや", upperKana: "なにわがた みじかきあしの ふしのまも", trans: "難波潟に生える芦の節と節の間のようなほんの短い時間でさえ逢わずに、このまま私に一生を過ごせとおっしゃるのですか。", technique: "序詞", category: "love" },
+      { id: 20, kimariji: "わび", upper: "わびぬれば 今はた同じ なにはなる", lower: "みをつくしても 逢はむとぞ思ふ", author: "<ruby>元良親王<rt>もとよししんのう</rt></ruby>", upperPlain: "わびぬれば 今はた同じ なにはなる", lowerPlain: "みをつくしても 逢はむとぞ思ふ", lowerKana: "みをつくしても あはむとぞおもふ", upperKana: "わびぬれば いまはたおなじ なにはなる", trans: "恋しさに身をやつしているので、今となっては噂になっても同じこと。難波の澪標（みつくし）のように、この身を滅ぼしてでも逢いたい。", technique: "掛詞（身を尽くし/澪標）", category: "love" },
+      { id: 21, kimariji: "いまこ", upper: "今来むと いひしばかりに 長月の", lower: "有明の月を 待ちいでつるかな", author: "<ruby>素性法師<rt>そせいほうし</rt></ruby>", upperPlain: "今来むと いひしばかりに 長月の", lowerPlain: "有明の月を 待ちいでつるかな", lowerKana: "ありあけのつきを まちいでつるかな", upperKana: "いまこむと いひしばかりに ながつきの", trans: "「すぐに行く」とあなたが言ったばかりに、待ち続けてついに九月の有明の月が出てきてしまいました。", technique: "時間経過の対比", category: "love" },
+      { id: 22, kimariji: "ふ", upper: "吹くからに 秋の草木の しをるれば", lower: "むべ山風を 嵐といふらむ", author: "<ruby>文屋康秀<rt>ふんやのやすひで</rt></ruby>", upperPlain: "吹くからに 秋の草木の しをるれば", lowerPlain: "むべ山風を 嵐といふらむ", lowerKana: "むべやまかぜを あらしといふらむ", upperKana: "ふくからに あきのくさきの しをるれば", trans: "吹きつけるとすぐに秋の草木がしおれるので、なるほど山からの風を「嵐」と言うのだろう。", technique: "一字決まり（ふ）", category: "season" },
+      { id: 23, kimariji: "つき", upper: "月見れば ちぢに物こそ 悲しけれ", lower: "わが身ひとつの 秋にはあらねど", author: "<ruby>大江千里<rt>おおえのちさと</rt></ruby>", upperPlain: "月見れば ちぢに物こそ 悲しけれ", lowerPlain: "わが身ひとつの 秋にはあらねど", lowerKana: "わがみひとつの あきにはあらねど", upperKana: "つきみれば ちぢにものこそ かなしけれ", trans: "月を見ると心が千々に乱れて悲しい。秋は私一人だけに訪れたわけではないのだが。", technique: "心境の客観化", category: "season" },
+      { id: 24, kimariji: "この", upper: "このたびは ぬさも取りあへず 手向山", lower: "紅葉の錦 神のまにまに", author: "<ruby>菅家<rt>かんけ</rt></ruby>", upperPlain: "このたびは ぬさも取りあへず 手向山", lowerPlain: "紅葉の錦 神のまにまに", lowerKana: "もみぢのにしき かみのまにまに", upperKana: "このたびは ぬさもとりあへず たむけやま", trans: "今回の旅では捧げものの幣帛を用意できませんでした。手向山の素晴らしい紅葉の錦を神の御心に従って受け取りください。", technique: "見立て", category: "travel" },
+      { id: 25, kimariji: "なにし", upper: "<ruby>名<rt>な</rt></ruby>にし<ruby>負<rt>お</rt></ruby>はば <ruby>逢坂山<rt>おうさかやま</rt></ruby>の さねかづら", lower: "人に知られで くるよしもがな", author: "<ruby>三条右大臣<rt>さんじょううだいじん</rt></ruby>", upperPlain: "名にし負はば 逢坂山の さねかづら", lowerPlain: "人に知られで くるよしもがな", lowerKana: "ひとにしられで くるよしもがな", upperKana: "なにしおはば おうさかやまの さねかづら", trans: "名前に「逢う」と持っている逢坂山のさねかずらを繰り寄せるように、人に知られないであなたのもとへ行く方法があればよいのに。", technique: "掛詞", category: "love" },
+      { id: 26, kimariji: "おぐ", upper: "小倉山 峰の紅葉ば 心あらば", lower: "今ひとたびの 行幸待たむ", author: "<ruby>貞信公<rt>ていしんこう</rt></ruby>", upperPlain: "小倉山 峰の紅葉ば 心あらば", lowerPlain: "今ひとたびの 行幸待たむ", lowerKana: "いまひとたびの みゆきまたむ", upperKana: "おぐらやま みねのもみじば こころあらば", trans: "小倉山の峰の紅葉よ、お前に思いやる心があるなら、もう一度天皇のお出ましがあるまで散らずに待っていておくれ。", technique: "擬人法", category: "season" },
+      { id: 27, kimariji: "みかの", upper: "みかの原 わきて流るる いづみ川", lower: "いつ見そめけむ 恋しくもあるかな", author: "<ruby>中納言兼輔<rt>ちゅうなごんかねすけ</rt></ruby>", upperPlain: "みかの原 わきて流るる いづみ川", lowerPlain: "いつ見そめけむ 恋しくもあるかな", lowerKana: "いつみそめけむ こひしくもあるかな", upperKana: "みかのはら わきてながるる いづみがわ", trans: "みかの原を分けて流れる泉川の「いつ」ではないが、いつあなたを初めて見たのだったか、これほど恋しいとは。", technique: "掛詞", category: "love" },
+      { id: 28, kimariji: "やまざ", upper: "山里は 冬ぞ寂しさ まさりける", lower: "人目も草も かれぬと思へば", author: "<ruby>源宗于朝臣<rt>みなもとのむねゆきあそん</rt></ruby>", upperPlain: "山里は 冬ぞ寂しさ まさりける", lowerPlain: "人目も草も かれぬと思へば", lowerKana: "ひとめもくさも かれぬとおもへば", upperKana: "やまざとは ふゆぞさびしさ まさりける", trans: "山里は冬こそ寂しさが一段と増すことだ。訪れる人も途絶え、草も枯れて（離れて）しまうと思うと。", technique: "掛詞（枯れ/離れ）", category: "season" },
+      { id: 29, kimariji: "こころあ", upper: "心あてに 折らばや折らむ 初霜の", lower: "おきまどはせる 白菊の花", author: "<ruby>凡河内躬恒<rt>おおしうちのおおしつね</rt></ruby>", upperPlain: "心あてに 折らばや折らむ 初霜の", lowerPlain: "おきまどはせる 白菊の花", lowerKana: "おきまどはせる しらぎくのはな", upperKana: "こころあてに おらばやおらむ はつしもの", trans: "あて推量で折るなら折ってみようか。初霜が降りて、霜なのか花なのか見分けがつかなくなっている白菊の花を。", technique: "視覚的混同", category: "season" },
+      { id: 30, kimariji: "ありあ", upper: "有明の つれなく見えし 別れより", lower: "あかつきばかり 憂きものはなし", author: "<ruby>壬生忠岑<rt>みぶのただみね</rt></ruby>", upperPlain: "有明の つれなく見えし 別れより", lowerPlain: "あかつきばかり 憂きものはなし", lowerKana: "あかつきばかり うきものはなし", upperKana: "ありあけの つれなくみえし わかれより", trans: "冷たく残っていた有明の月のように、そっけなかったあなたとの別れ以来、夜明けほど辛く切ないものはありません。", technique: "比喩", category: "love" },
+      { id: 31, kimariji: "あさぼらけあ", upper: "朝ぼらけ 有明の月と 見るまでに", lower: "吉野の里に ふれる白雪", author: "<ruby>坂上是則<rt>さかのうえのこれのり</rt></ruby>", upperPlain: "朝ぼらけ 有明の月と 見るまでに", lowerPlain: "吉野の里に ふれる白雪", lowerKana: "よしののさとに ふれるしらゆき", upperKana: "あさぼらけ ありあけのつきと みるまでに", trans: "ほんのり夜が明けるころ、有明の月が光っているのかと思うほど明るく吉野の里に白雪が降っている。", technique: "見立て", category: "season" },
+      { id: 32, kimariji: "やまが", upper: "山川に 風のかけたる しがらみは", lower: "流れもあえぬ 紅葉なりけり", author: "<ruby>春道列樹<rt>はるみちのつらき</rt></ruby>", upperPlain: "山川に 風のかけたる しがらみは", lowerPlain: "流れもあえぬ 紅葉なりけり", lowerKana: "ながれもあへぬ もみぢなりけり", upperKana: "やまがわに かぜのかけたる しがらみは", trans: "山の川に風が架けた柵とは、流れることもできずに堰き止められている紅葉であったよ。", technique: "見立て", category: "season" },
+      { id: 33, kimariji: "ひさ", upper: "ひさかたの 光ののどけき 春の日に", lower: "しづ心なく 花の散るらむ", author: "<ruby>紀友則<rt>きのとののり</rt></ruby>", upperPlain: "ひさかたの 光ののどけき 春の日に", lowerPlain: "しづ心なく 花の散るらむ", lowerKana: "しづごころなく はなのちるらむ", upperKana: "ひさかたの ひかりののどけき はるのひに", trans: "日の光がこれほど穏やかな春の日に、どうして桜の花は落ち着いた心もなく散っていくのだろうか。", technique: "枕詞", category: "season" },
+      { id: 34, kimariji: "たれ", upper: "誰をかも 知る人にせむ 高砂の", lower: "松も昔の 友ならなくに", author: "<ruby>藤原興風<rt>ふじわらのおきかぜ</rt></ruby>", upperPlain: "誰をかも 知る人にせむ 高砂の", lowerPlain: "松も昔の 友ならなくに", lowerKana: "まつもむかしの ともならなくに", upperKana: "たれをかも しるひとにせむ たかさごの", trans: "私はいったい誰を親しい友とすればよいのだろう。長寿の高砂の松でさえ古くからの友ではないのだから。", technique: "老いの孤独", category: "misc" },
+      { id: 35, kimariji: "ひとは", upper: "人はいさ 心も知らず ふるさとは", lower: "花ぞ昔の 香ににほひける", author: "<ruby>紀貫之<rt>きのつらゆき</rt></ruby>", upperPlain: "人はいさ 心も知らず ふるさとは", lowerPlain: "花ぞ昔の 香ににほひける", lowerKana: "はなぞむかしの かににほひける", upperKana: "ひとはいさ こころもしらず ふるさとは", trans: "人の心はさあどう変わったか分かりませんが、昔馴染みのこの里では梅の花だけが昔と変わらない香りで咲いています。", technique: "対比表現", category: "travel" },
+      { id: 36, kimariji: "なつの", upper: "夏の夜は まだ宵ながら 明けぬるを", lower: "雲のいづこに 月宿るらむ", author: "<ruby>清原深養父<rt>きよはらのふかやぶ</rt></ruby>", upperPlain: "夏の夜は まだ宵ながら 明けぬるを", lowerPlain: "雲のいづこに 月宿るらむ", lowerKana: "くものいづこに つきやどるらむ", upperKana: "なつのよは まだよいながら あけぬるを", trans: "夏の夜はまだ宵だと思っているうちに明けてしまったが、月は雲のどのあたりに宿をとっているのだろうか。", technique: "擬人化", category: "season" },
+      { id: 37, kimariji: "しら", upper: "白露に 風の吹きしく 秋の野は", lower: "つらぬきとめぬ 玉ぞ散りける", author: "<ruby>文屋朝康<rt>ふんやのあさやす</rt></ruby>", upperPlain: "白露に 風の吹きしく 秋の野は", lowerPlain: "つらぬきとめぬ 玉ぞ散りける", lowerKana: "つらぬきとめぬ たまぞちりける", upperKana: "しらつゆに かぜのふきしく あきののは", trans: "草葉の白露に風が吹きつけている秋の野原は、糸で貫き止めていない真珠が飛び散っているようだ。", technique: "比喩", category: "season" },
+      { id: 38, kimariji: "わすら", upper: "忘らるる 身をば思はず 誓ひてし", lower: "人の命の 惜しくもあるかな", author: "<ruby>右近<rt>うこん</rt></ruby>", upperPlain: "忘らるる 身をば思はず 誓ひてし", lowerPlain: "人の命の 惜しくもあるかな", lowerKana: "ひとのいのちの おしくもあるかな", upperKana: "わすらるる みをばおもはず ちかひてし", trans: "忘れられる私の身の辛さは思いません。ただ「神にかけて愛する」と誓ったあなたの命が惜しいのです。", technique: "皮肉・恋心", category: "love" },
+      { id: 39, kimariji: "あさじ", upper: "浅茅生の 小野の篠原 しのぶれど", lower: "あまりてなどか 人の恋しき", author: "<ruby>参議等<rt>さんぎひとし</rt></ruby>", upperPlain: "浅茅生の 小野の篠原 しのぶれど", lowerPlain: "あまりてなどか 人の恋しき", lowerKana: "あまりてなどか ひとのこひしき", upperKana: "あさじうの おののしのはら しのぶれど", trans: "丈の低い茅が生える野の竹のように、耐え忍んでいるけれど耐えきれず、どうしてこれほどあなたが恋しいのだろう。", technique: "序詞", category: "love" },
+      { id: 40, kimariji: "しの", upper: "しのぶれど 色に出でにけり わが恋は", lower: "物や思ふと 人の問ふまで", author: "<ruby>平兼盛<rt>たいらのかねもり</rt></ruby>", upperPlain: "しのぶれど 色に出でにけり わが恋は", lowerPlain: "物や思ふと 人の問ふまで", lowerKana: "ものやおもふと ひとのとふまで", upperKana: "しのぶれど いろにいでにけり わがこいは", trans: "心の中に隠していたけれど顔色に出てしまっていたのだなあ。「誰かを想っているのですか」と人が尋ねるほどに。", technique: "心理描写", category: "love" },
+     { id: 41, kimariji: "こひ", upper: "恋すてふ わが名はまだき 立ちにけり", lower: "人知れずこそ 思ひそめしか", author: "<ruby>壬生忠見<rt>みぶのただみ</rt></ruby>", upperPlain: "恋すてふ わが名はまだき 立ちにけり", lowerPlain: "人知れずこそ 思ひそめしか", lowerKana: "ひとしれずこそ おもひそめしか", upperKana: "こひすてふ わがなはまだき たちにけり", trans: "恋をしているという私の噂が早くも立ってしまった。誰にも知られないよう心の中で想い始めたばかりだったのに。", technique: "対比（噂と内面）", category: "love" },
+      { id: 42, kimariji: "ちぎりき", upper: "契りきな かたみに袖を しぼりつつ", lower: "末の松山 波越さじとは", author: "<ruby>清原元輔<rt>きよはらのもとすけ</rt></ruby>", upperPlain: "契りきな かたみに袖を しぼりつつ", lowerPlain: "末の松山 波越さじとは", lowerKana: "すゑのまつやま なみこさじとは", upperKana: "ちぎりきな かたみにそでを しぼりつつ", trans: "約束しましたよね。お互いに涙で袖を絞りながら。「末の松山を波が越えないように心変わりしない」と。", technique: "故事・比喩", category: "love" },
+      { id: 43, kimariji: "あいみ", upper: "逢ひ見ての のちの心に くらぶれば", lower: "昔は物を 思はざりけり", author: "<ruby>権中納言敦忠<rt>ごんちゅうなごんあつただ</rt></ruby>", upperPlain: "逢ひ見ての のちの心に くらぶれば", lowerPlain: "昔は物を 思はざりけり", lowerKana: "むかしはものを おもはざりけり", upperKana: "あいみての のちのこころに くらぶれば", trans: "あなたと逢瀬を遂げた後の恋心に比べれば、逢う前の恋の悩みなど、物を思っていないのと同じであったよ。", technique: "対比構造", category: "love" },
+      { id: 44, kimariji: "あふこ", upper: "<ruby>逢<rt>あ</rt></ruby>ふことの <ruby>絶<rt>た</rt></ruby>えてしなくは なかなかに", lower: "人をも身をも 恨みざらまし", author: "<ruby>中納言朝忠<rt>ちゅうなごんあさただ</rt></ruby>", upperPlain: "逢ふことの 絶えてしなくは なかなかに", lowerPlain: "人をも身をも 恨みざらまし", lowerKana: "ひとをもみをも うらみざらまし", upperKana: "あふことの たえてしなくは なかなかに", trans: "最初から逢うことが全くなかったなら、こんなにも相手の冷たさや自分の身の不運を恨むこともなかったでしょうに。", technique: "反実仮想", category: "love" },
+     { id: 45, kimariji: "あはれ", upper: "あはれとも いふべき人は おもほえで", lower: "身のいたづらに ならむとぞ思ふ", author: "<ruby>謙徳公<rt>けんとくこう</rt></ruby>", upperPlain: "あはれとも いふべき人は おもほえで", lowerPlain: "身のいたづらに ならむとぞ思ふ", lowerKana: "みのいたづらに ならむとぞおもふ", upperKana: "あはれとも いふべきひとは おもほえで", trans: "「可哀想に」と同情してくれるような人は思い浮かばず、このまま私の身は虚しく死んでいくのだろう。", technique: "悲恋の感情", category: "love" },
+      { id: 46, kimariji: "ゆら", upper: "由良の門を 渡る舟人 かぢを絶え", lower: "ゆくへも知らぬ 恋の道かな", author: "<ruby>曽禰好忠<rt>そねのよしただ</rt></ruby>", upperPlain: "由良の門を 渡る舟人 かぢを絶え", lowerPlain: "ゆくへも知らぬ 恋の道かな", lowerKana: "ゆくへもしらぬ こひのみちかな", upperKana: "ゆらのとを わたるふなびと かじをたえ", trans: "由良の瀬戸を渡る船頭が櫂を失って行方が分からないように、どこへ行くか分からない私の恋の行方であるよ。", technique: "比喩", category: "love" },
+      { id: 47, kimariji: "やえ", upper: "八重むぐら 茂れる宿の 寂しきに", lower: "人こそ見えね 秋は来にけり", author: "<ruby>恵慶法師<rt>えぎょうほうし</rt></ruby>", upperPlain: "八重むぐら 茂れる宿の 寂しきに", lowerPlain: "人こそ見えね 秋は来にけり", lowerKana: "ひとこそみえね あきはきにけり", upperKana: "やえむぐら しげれるやどの さびしきに", trans: "雑草が茂っている荒れ果てた家で寂しく暮らしていると、訪ねてくる人はいないが秋だけはやって来たのだなあ。", technique: "対比", category: "season" },
+      { id: 48, kimariji: "かぜを", upper: "風をいたみ 岩うつ波の おのれのみ", lower: "砕けて物を 思ふころかな", author: "<ruby>源重之<rt>みなもとのしげゆき</rt></ruby>", upperPlain: "風をいたみ 岩うつ波の おのれのみ", lowerPlain: "砕けて物を 思ふころかな", lowerKana: "くだけてものを おもふころかな", upperKana: "かぜをいたみ いわうつなみの おのれのみ", trans: "風が強いので岩に打ち寄せる波が自分だけ砕け散るように、私ばかり心が砕けるほど物思いに沈むこの頃である。", technique: "比喩", category: "love" },
+      { id: 49, kimariji: "みかき", upper: "みかきもり 衛士のたく火の 夜は燃え", lower: "昼は消えつつ 物をこそ思へ", author: "<ruby>大中臣能宣朝臣<rt>おおなかとみのよしのぶあそん</rt></ruby>", upperPlain: "みかきもり 衛士のたく火の 夜は燃え", lowerPlain: "昼は消えつつ 物をこそ思へ", lowerKana: "ひるはきへつつ ものをこそおもへ", upperKana: "みかきもり えじのたくひの よるはもえ", trans: "御所の門を守る衛士の焚く火が夜は燃え昼は消えているように、私の恋心も夜は激しく燃え昼は消え入るように悩んでいる。", technique: "比喩", category: "love" },
+      { id: 50, kimariji: "きみがためお", upper: "君がため 惜しからざりし 命さえ", lower: "長からむことを 祈りけるかな", author: "<ruby>藤原義孝<rt>ふじわらのよしたか</rt></ruby>", upperPlain: "君がため 惜しからざりし 命さえ", lowerPlain: "長からむことを 祈りけるかな", lowerKana: "ながからむことを いのりけるかな", upperKana: "きみがため おしからざりし いのちさえ", trans: "あなたにお逢いするためなら捨てても惜しくなかった命ですが、逢えた今は長くありたいと願うようになりました。", technique: "心境の変化", category: "love" },
+      { id: 51, kimariji: "かくと", upper: "かくとだに えやは伊吹の さしも草", lower: "さしも知らじな 燃ゆる思ひを", author: "<ruby>藤原実方朝臣<rt>ふじわらのさねかたあそん</rt></ruby>", upperPlain: "かくとだに えやはいぶきの さしも草", lowerPlain: "さしも知らじな 燃ゆる思ひを", lowerKana: "さしもしらじな もゆるおもひを", upperKana: "かくとだに えやはいぶきの さしもぐさ", trans: "こんなに想っているとさえ言えないのですから、伊吹山のさしも草のように激しく燃える私の想いをあなたは知らないでしょう。", technique: "序詞", category: "love" },
+      { id: 52, kimariji: "あけ", upper: "明けぬれば 暮るるものとは 知りながら", lower: "なお恨めしき 朝ぼらけかな", author: "<ruby>藤原道信朝臣<rt>ふじわらのみちのぶあそん</rt></ruby>", upperPlain: "明けぬれば 暮るるものとは 知りながら", lowerPlain: "なお恨めしき 朝ぼらけかな", lowerKana: "なほうらめしき あさぼらけかな", upperKana: "あけぬれば くるるものとは しりながら", trans: "夜が明けてもまた夕暮れが来て逢えるとは分かっているけれど、やはりあなたと別れなければならない朝は恨めしい。", technique: "恋の切なさ", category: "love" },
+      { id: 53, kimariji: "なげき", upper: "嘆きつつ ひとり寝る夜の 明くる間は", lower: "いかに久しき 物かと知るや", author: "<ruby>右大将道綱母<rt>うだいしょうみちつねのはは</rt></ruby>", upperPlain: "嘆きつつ ひとり寝る夜の 明くる間は", lowerPlain: "いかに久しき 物かと知るや", lowerKana: "いかにひさしき ものかとしるや", upperKana: "なげきつつ ひとりねるよの あくるまは", trans: "あなたのお訪でを待って溜息をつき一人で寝る夜が明けるまで、どれほど長いものかお分かりですか。", technique: "寂しさの告白", category: "love" },
+      { id: 54, kimariji: "わすらじの", upper: "忘れじの 行末までは かたければ", lower: "今日を限りの 命ともがな", author: "<ruby>儀同三司母<rt>ぎどうさんしのはは</rt></ruby>", upperPlain: "忘れじの 行末までは かたければ", lowerPlain: "今日を限りの 命ともがな", lowerKana: "けふをかぎりの いのちともがな", upperKana: "わすらじの ゆくすえまでは かたければ", trans: "「いつまでも忘れない」という言葉も遠い未来までは当てにならないので、幸せな今日を限りに命が絶えてほしい。", technique: "切実な恋心", category: "love" },
+      { id: 55, kimariji: "たき", upper: "滝の音は 絶えて久しく なりぬれど", lower: "名こそ流れて なお聞こえけれ", author: "<ruby>大納言公任<rt>だいなごんきんとう</rt></ruby>", upperPlain: "滝の音は 絶えて久しく なりぬれど", lowerPlain: "名こそ流れて なお聞こえけれ", lowerKana: "なこそながれて なほきこえけれ", upperKana: "たきのおとは たえてひさしく なりぬれど", trans: "滝の水音が途絶えてから長い年月が過ぎたけれど、その素晴らしさは評判として今も流れて聞こえている。", technique: "掛詞", category: "misc" },
+      { id: 56, kimariji: "あらざ", upper: "あらざらむ この世のほかの 思い出に", lower: "今ひとたびの 逢うこともがな", author: "<ruby>和泉式部<rt>いずみしきぶ</rt></ruby>", upperPlain: "あらざらむ この世のほかの 思い出に", lowerPlain: "今ひとたびの 逢うこともがな", lowerKana: "いまひとたびの あふこともがな", upperKana: "あらざらむ このよのほかの おもひでに", trans: "もうすぐ私は病で死んでしまうでしょう。あの世への思い出として最後にもう一度だけあなたにお逢いしたい。", technique: "臨終の恋歌", category: "love" },
+      { id: 57, kimariji: "め", upper: "めぐりあひて 見しやそれとも わかぬまに", lower: "雲がくれにし 夜半の月かな", author: "<ruby>紫式部<rt>むらさきしきぶ</rt></ruby>", upperPlain: "めぐりあひて 見しやそれとも わかぬまに", lowerPlain: "雲がくれにし 夜半の月かな", lowerKana: "くもがくれにし よはのつきかな", upperKana: "めぐりあひて みしやそれとも わかぬまに", trans: "せっかく巡り逢えたのに誰とも確かめられないうちに、雲の中に隠れてしまった夜半の月のようですぐに帰ってしまったのですね。", technique: "一字決まり（め）", category: "love" },
+      { id: 58, kimariji: "ありま", upper: "有馬山 猪名の笹原 風吹けば", lower: "いでそよ人を 忘れやはする", author: "<ruby>大弐三位<rt>だいにのさんみ</rt></ruby>", upperPlain: "有馬山 猪名の笹原 風吹けば", lowerPlain: "いでそよ人を 忘れやはする", lowerKana: "いでそよひとを わすれやはする", upperKana: "ありまやま いなのささはら かぜふけば", trans: "有馬山の近くにある猪名の笹原に風が吹くと笹がそよぐように、「そうですよ、どうして私があなたを忘れましょうか」。", technique: "序詞", category: "love" },
+      { id: 59, kimariji: "やす", upper: "やすらはで <ruby>寝<rt>ね</rt></ruby>なましものを さ<ruby>夜<rt>よ</rt></ruby>ふけて", lower: "傾くまでの 月を見しかな", author: "<ruby>赤染衛門<rt>あかぞめえもん</rt></ruby>", upperPlain: "やすらはで 寝なましものを さ夜ふけて", lowerPlain: "傾くまでの 月を見しかな", lowerKana: "かたぶくまでの つきをみしかな", upperKana: "やすらはで ねなましものを さよふけて", trans: "あなたが行くか躊躇して来なかったので寝ずに待ってしまいました。夜が更けて西に傾くまでの月を見てしまいましたよ。", technique: "恨みの感情", category: "love" },
+     { id: 60, kimariji: "おおえ", upper: "大江山 生野の道の 遠ければ", lower: "まだふみも見ず 天の橋立", author: "<ruby>小式部内侍<rt>こしきぶのないし</rt></ruby>", upperPlain: "大江山 生野の道の 遠ければ", lowerPlain: "まだふみも見ず 天の橋立", lowerKana: "まだふみもみず あまのはしだて", upperKana: "おおえやま いくののみちの とほければ", trans: "大江山を越えて生野へ行く道は遠いので、まだ天の橋立の地を踏んだこともなく母からの手紙（文）も見ていません。", technique: "掛詞（踏み/文）", category: "travel" },
+      { id: 61, kimariji: "いに", upper: "いにしへの 奈良の都の 八重桜", lower: "けふ九重に にほひぬるかな", author: "<ruby>伊勢大輔<rt>いせのたいふ</rt></ruby>", upperPlain: "いにしへの 奈良の都の 八重桜", lowerPlain: "けふ九重に にほひぬるかな", lowerKana: "けふここのへに にほひぬるかな", upperKana: "いにしえの ならのみやこの やえざくら", trans: "昔の奈良の都で咲いていた美しい八重桜が、今日はこの九重（宮中）でいっそう鮮やかに美しく咲き誇っています。", technique: "対比", category: "season" },
+      { id: 62, kimariji: "よを", upper: "夜をこめて 鶏のそらねは はかるとも", lower: "よに逢坂の 関はゆるさじ", author: "<ruby>清少納言<rt>せいしょうなごん</rt></ruby>", upperPlain: "夜をこめて 鶏のそらねは はかるとも", lowerPlain: "よに逢坂の 関はゆるさじ", lowerKana: "よにあふさかの せきはゆるさじ", upperKana: "よをこめて とりのそらねは はかるとも", trans: "夜が明けないうちにニワトリの鳴き真似をして騙そうとしても、逢坂の関は絶対に開くことはありませんよ。", technique: "故事", category: "love" },
+      { id: 63, kimariji: "いまは", upper: "今はただ 思い絶えなむ とばかりを", lower: "人づてならで 言うよしもがな", author: "<ruby>左京大夫道雅<rt>さきょうのだいぶみちまさ</rt></ruby>", upperPlain: "今はただ 思い絶えなむ とばかりを", lowerPlain: "人づてならで 言うよしもがな", lowerKana: "ひとづてならで いふよしもがな", upperKana: "いまはただ おもいたえなん とばかりを", trans: "今はただ「あなたを諦めます」ということだけでも、人づてではなく直接あなたにお会いして伝えたい。", technique: "切ない感情", category: "love" },
+      { id: 64, kimariji: "あさぼらけう", upper: "朝ぼらけ 宇治の川霧 たえだえに", lower: "あらわれわたる 瀬々のあじろぎ", author: "<ruby>権中納言定頼<rt>ごんちゅうなごんさだより</rt></ruby>", upperPlain: "朝ぼらけ 宇治の川霧 たえだえに", lowerPlain: "あらわれわたる 瀬々のあじろぎ", lowerKana: "あらはれわたる せぜのあじろぎ", upperKana: "あさぼらけ うじのかわぎり たえだえに", trans: "朝がほのかに明けるころ、宇治川の川霧が切れ切れになって見えてくる、浅瀬に打ち立てられた網代木（あじろぎ）の姿よ。", technique: "写実的描写", category: "season" },
+      { id: 65, kimariji: "うら", upper: "<ruby>恨<rt>うら</rt></ruby>みわび <ruby>干<rt>ほ</rt></ruby>さぬ<ruby>袖<rt>そで</rt></ruby>だにあるものを", lower: "恋に朽ちなむ 名こそ惜しけれ", author: "<ruby>相模<rt>さがみ</rt></ruby>", upperPlain: "恨みわび 干さぬ袖だにあるものを", lowerPlain: "恋に朽ちなむ 名こそ惜しけれ", lowerKana: "こひにくちなむ なこそおしけれ", upperKana: "うらみわび ほさぬそでだにあるものを", trans: "あなたの冷たさを恨み悲しみ、乾く暇もない涙で濡れた袖さえあるのに、恋の噂で私の名評が損なわれることこそ惜しいのだ。", technique: "気品ある心", category: "love" },
+      { id: 66, kimariji: "もろ", upper: "もろともに あはれと思へ <ruby>山桜<rt>やまざくら</rt></ruby>", lower: "花よりほかに 知る人もなし", author: "<ruby>前大僧正行尊<rt>さきのだいそうじょうぎょうそん</rt></ruby>", upperPlain: "もろともに あはれと思へ 山桜", lowerPlain: "花よりほかに 知る人もなし", lowerKana: "はなよりほかに しるひともなし", upperKana: "もろともに あはれとおもへ やまざくら", trans: "私がお前を愛おしく思うように山桜よお前も私を愛おしく思っておくれ。この奥山ではお前の他に知人もいないのだから。", technique: "擬人化", category: "season" },
+      { id: 67, kimariji: "はるの", upper: "春の夜の 夢ばかりなる 手枕に", lower: "かひなくたたむ 名こそ惜しけれ", author: "<ruby>周防内侍<rt>すおうのないし</rt></ruby>", upperPlain: "春の夜の 夢ばかりなる 手枕に", lowerPlain: "かひなくたたむ 名こそ惜しけれ", lowerKana: "かひなくたたむ なこそおしけれ", upperKana: "はるのよの ゆめばかりなる てまくらに", trans: "春の夜の短い夢のような戯れの腕枕など受けて、つまらない浮気な噂が立つことこそ惜しいのです。", technique: "掛詞", category: "love" },
+      { id: 68, kimariji: "こころに", upper: "心にも あらでこの世に 長らえば", lower: "恋しかるべき 夜半の月かな", author: "<ruby>三条院<rt>さんじょういん</rt></ruby>", upperPlain: "心にも あらでこの世に 長らえば", lowerPlain: "恋しかるべき 夜半の月かな", lowerKana: "こひしかるべき よはのつきかな", upperKana: "こころにも あらでこのよに ながらえば", trans: "思い通りにならないこの世で生き永らえたなら、今夜の素晴らしい月をきっと恋しく思い出すことだろう。", technique: "運命への歎き", category: "misc" },
+      { id: 69, kimariji: "あらし", upper: "<ruby>嵐<rt>あらし</rt></ruby>ふく み<ruby>室<rt>むろ</rt></ruby>の<ruby>山<rt>やま</rt></ruby>の <ruby>もみぢ葉<rt>ば</rt></ruby>は", lower: "竜田の川の 錦なりけり", author: "<ruby>能因法師<rt>のういんほうし</rt></ruby>", upperPlain: "嵐ふく み室の山の もみぢ葉は", lowerPlain: "竜田の川の 錦なりけり", lowerKana: "たつたのかはの にしきなりけり", upperKana: "あらしふく みむろのやまの もみぢばは", trans: "山風が吹き下ろす三室の山の紅葉の葉は、竜田川の川面を覆う素晴らしい錦織であったよ。", technique: "見立て", category: "season" },
+      { id: 70, kimariji: "さ", upper: "さびしさに 宿をたち出でて ながむれば", lower: "いづこも同じ 秋の夕ぐれ", author: "<ruby>良暹法師<rt>りょうぜんほうし</rt></ruby>", upperPlain: "さびしさに 宿をたち出でて ながむれば", lowerPlain: "いづこも同じ 秋の夕ぐれ", lowerKana: "いづこもおなじ あきのゆふぐれ", upperKana: "さびしさに やどをたちいでて ながむれば", trans: "寂しさに耐えかねて庵を出て見渡すと、どこもかしこも同じように寂しい秋の夕暮れであった。", technique: "一字決まり（さ）", category: "season" },
+     { id: 71, kimariji: "ゆう", upper: "夕されば 門田の稲葉 おとずれて", lower: "芦のまろやに 秋風ぞふく", author: "<ruby>大納言経信<rt>だいなごんつねのぶ</rt></ruby>", upperPlain: "夕されば 門田の稲葉 おとずれて", lowerPlain: "芦のまろやに 秋風ぞふく", lowerKana: "あしのまろやに あきかぜぞふく", upperKana: "ゆふされば かどたのいなば おとずれて", trans: "夕方になると門前の田の稲の葉をそよがせて、芦ぶきの粗末な小屋に秋風が吹き抜けていく。", technique: "聴覚的描写", category: "season" },
+      { id: 72, kimariji: "おと", upper: "音に聞く 高師の浜の あだ波は", lower: "かけじや袖の ぬれもこそすれ", author: "<ruby>祐子内親王家紀伊<rt>ゆうしないしんのうけのきい</rt></ruby>", upperPlain: "音に聞く 高師の浜の あだ波は", lowerPlain: "かけじや袖の ぬれもこそすれ", lowerKana: "かけじやそでの ぬれもこそすれ", upperKana: "おとにきく たかしのはまの あだなみは", trans: "噂に高い高師の浜の浮気な波（あなた）には寄り添いません。袖が涙で濡れてしまいますから。", technique: "掛詞", category: "love" },
+      { id: 73, kimariji: "たか", upper: "高砂の 尾の上の桜 咲きにけり", lower: "外山の霞 たたずもあらなむ", author: "<ruby>前権中納言匡房<rt>さきのごんちゅうなごんまさふさ</rt></ruby>", upperPlain: "高砂の 尾の上の桜 咲きにけり", lowerPlain: "外山の霞 たたずもあらなむ", lowerKana: "とやまのかすみ たたずもあらなむ", upperKana: "たかさごの おのえのさくら さきにけり", trans: "遠くの山の峰にある桜が咲いたようだ。手前の山の山霞よ、どうか立ちこめて隠さないでおくれ。", technique: "擬人化", category: "season" },
+      { id: 74, kimariji: "うかり", upper: "うかりける 人を初瀬の 山おろしよ", lower: "激しかれとは 祈らざりしを", author: "<ruby>源俊頼朝臣<rt>みなもとのとしよりあそん</rt></ruby>", upperPlain: "うかりける 人を初瀬の 山おろしよ", lowerPlain: "激しかれとは 祈らざりしを", lowerKana: "はげしかれとは いのらざりしを", upperKana: "うかりける ひとをはつせの やまおろしよ", trans: "冷たいあの方の心がこちらを向くよう初瀬の観音様に祈ったのに、初瀬の山風のように冷たさが激しくなれとは祈らなかったのに。", technique: "比喩", category: "love" },
+      { id: 75, kimariji: "ちぎりお", upper: "契りおきし させもが露を 命にて", lower: "あはれ今年の 秋もいぬめり", author: "<ruby>藤原基俊<rt>ふじわらのもととし</rt></ruby>", upperPlain: "契りおきし させもが露を 命にて", lowerPlain: "あはれ今年の 秋もいぬめり", lowerKana: "あはれことしの あきもいぬめり", upperKana: "ちぎりおきし させもがつゆを いのちにて", trans: "恵みの約束の言葉を命の支えとして待っていましたが、ああ虚しく今年の秋も過ぎ去っていくようです。", technique: "比喩", category: "love" },
+      { id: 76, kimariji: "わたのはらこ", upper: "わたの原 漕ぎ出でて見れば ひさかたの", lower: "雲居にまがふ 沖つ白波", author: "<ruby>藤原忠通<rt>ふじわらのただみち</rt></ruby>", upperPlain: "わたの原 漕ぎ出でて見れば ひさかたの", lowerPlain: "雲居にまがふ 沖つ白波", lowerKana: "くもゐにまがふ おきつしらなみ", upperKana: "わたのはら こぎいでてみれば ひさかたの", trans: "大海原へ漕ぎ出して見渡すと、空の雲と見間違えるほど沖に白い波が立っている。", technique: "見立て", category: "travel" },
+      { id: 77, kimariji: "せ", upper: "瀬をはやみ 岩にせかるる 滝川の", lower: "われても末に あはむとぞ思ふ", author: "<ruby>崇徳院<rt>すとくいん</rt></ruby>", upperPlain: "瀬をはやみ 岩にせかるる 滝川の", lowerPlain: "われても末に あはむとぞ思ふ", lowerKana: "われてもすゑに あはむとぞおもふ", upperKana: "せをはやみ いわにせかるる たきがわの", trans: "川の流れが速いので岩に遮られた急流がふたつに分かれても再び合流するように、私たちも今は離れても必ず再会しよう。", technique: "一字決まり（せ）", category: "love" },
+     { id: 78, kimariji: "あわじ", upper: "淡路島 かよふ千鳥の 鳴く声に", lower: "いく夜ねざめぬ 須磨の関もり", author: "<ruby>源兼昌<rt>みなもとのかねまさ</rt></ruby>", upperPlain: "淡路島 かよふ千鳥の 鳴く声に", lowerPlain: "いく夜ねざめぬ 須磨の関もり", lowerKana: "いくよねざめぬ すまのせきもり", upperKana: "あわじしま かよふちどりの なくこえに", trans: "淡路島から渡ってくる千鳥の寂しい泣き声に、須磨の関守はいく夜目を覚ましたことでしょう。", technique: "旅情描写", category: "travel" },
+      { id: 79, kimariji: "あきか", upper: "秋風に たなびく雲の 絶え間より", lower: "もれいづる月の 影のさやけさ", author: "<ruby>左京大夫顕輔<rt>さきょうのだいぶあきすけ</rt></ruby>", upperPlain: "秋風に たなびく雲の 絶え間より", lowerPlain: "もれいづる月の 影のさやけさ", lowerKana: "もれいづるつきの かげのさやけさ", upperKana: "あきかぜに たなびくくもの たえまより", trans: "秋風になびく雲の切れ間から漏れ出て光る月の光の、なんと清らかで美しいことでしょう。", technique: "明暗の対比", category: "season" },
+      { id: 80, kimariji: "ながから", upper: "<ruby>長<rt>なが</rt></ruby>からむ <ruby>心<rt>こころ</rt></ruby>も知らず <ruby>黒髪<rt>くろかみ</rt></ruby>の", lower: "乱れてけさは 物をこそ思へ", author: "<ruby>待賢門院堀川<rt>たいけんもんいんのほりかわ</rt></ruby>", upperPlain: "長からむ 心も知らず 黒髪の", lowerPlain: "乱れてけさは 物をこそ思へ", lowerKana: "みだれてけさは ものをこそおもへ", upperKana: "ながからむ こころもしらず くろかみの", trans: "「いつまでも変わらない」とおっしゃるあなたの心が信用できませんので、私の黒髪が乱れるように、今朝は心乱れて物思いに沈んでいます。", technique: "序詞・比喩", category: "love" },
+      { id: 81, kimariji: "ほ", upper: "ほととぎす 鳴きつる方を ながむれば", lower: "ただ有明の 月ぞ残れる", author: "<ruby>後徳大寺左大臣<rt>ごとくだいじのさだいじん</rt></ruby>", upperPlain: "ほととぎす 鳴きつる方を ながむれば", lowerPlain: "ただ有明の 月ぞ残れる", lowerKana: "ただありあけの つきぞのこれる", upperKana: "ほととぎす なきつるかたを ながむれば", trans: "ホトトギスが鳴いた方を眺めると、姿は見えずただ明け方の空に有明の月がぽつりと残っているばかりであった。", technique: "余情の美", category: "season" },
+      { id: 82, kimariji: "おもい", upper: "思いわび さても生きよと やはかける", lower: "憂きにたへぬは 涙なりけり", author: "<ruby>道因法師<rt>どういんほうし</rt></ruby>", upperPlain: "思いわび さても生きよと やはかける", lowerPlain: "憂きにたへぬは 涙なりけり", lowerKana: "うきにたへぬは なみだなりけり", upperKana: "おもいわび さてもいきよと やはかける", trans: "辛い思いに耐えて生きよと神はお見捨てになるのか。辛さに耐えかねて溢れ出るのは涙であった。", technique: "悲嘆の情", category: "love" },
+      { id: 83, kimariji: "よのなかよ", upper: "世の中よ 道こそなけれ 思いわび", lower: "山にいるにも 哀れなりけり", author: "<ruby>皇太后宮大夫俊成<rt>こうたいごうぐうのだいぶしゅんぜい</rt></ruby>", upperPlain: "世の中よ 道こそなけれ 思いわび", lowerPlain: "山にいるにも 哀れなりけり", lowerKana: "やまにゐるにも あはれなりけり", upperKana: "よのなかよ みちこそなけれ おもいわび", trans: "この世には苦難から逃れる道はない。思い悩んで山奥に隠れ住んでも、やはり悲しいことばかりなのだ。", technique: "無常観", category: "misc" },
+      { id: 84, kimariji: "ながら", upper: "<ruby>長<rt>なが</rt></ruby>らへば またこのごろや しのばれむ", lower: "憂しと見し世ぞ 今は恋しき", author: "<ruby>藤原清輔朝臣<rt>ふじわらのきよすけあそん</rt></ruby>", upperPlain: "長らへば またこのごろや しのばれむ", lowerPlain: "憂しと見し世ぞ 今は恋しき", lowerKana: "うしとみしよぞ いまはこひしき", upperKana: "ながらえば またこのごろや しのばれむ", trans: "この先長く生きていれば、辛いと思っている今この頃のことも懐かしく思い出されるのだろうか。かつて辛いと思った昔のことも、今では恋しく思い出されるのだから。", technique: "過去と現在の対比", category: "misc" },
+      { id: 85, kimariji: "よも", upper: "夜もすがら 物思うころは 明けやらで", lower: "閨の暇さへ つれなかりけり", author: "<ruby>俊恵法師<rt>しゅんえほうし</rt></ruby>", upperPlain: "夜もすがら 物思うころは 明けやらで", lowerPlain: "閨の暇さへ つれなかりけり", lowerKana: "ねやのひままさへ つれなかりけり", upperKana: "よもすがら ものおもふころは あけやらで", trans: "一晩中物思いに沈むこの頃は夜が明けてくれず、寝室の隙間さえ冷たく恨めしく思えるのだ。", technique: "擬人化", category: "love" },
+      { id: 86, kimariji: "なげけと", upper: "嘆けとて 月やは物を 思はする", lower: "かこち顔なる わが涙かな", author: "<ruby>西行法師<rt>さいぎょうほうし</rt></ruby>", upperPlain: "嘆けとて 月やは物を 思はする", lowerPlain: "かこち顔なる わが涙かな", lowerKana: "かこちがほなる わがなみだかな", upperKana: "なげけとて つきやはものを おもはする", trans: "「嘆け」と言って月が私に物思いをさせるのだろうか、いやそうではないのに月のせいにして流れる私の涙であるよ。", technique: "反語表現", category: "love" },
+      { id: 87, kimariji: "む", upper: "村雨の 露もまだひぬ 槇の葉に", lower: "霧立ちのぼる 秋の夕ぐれ", author: "<ruby>寂蓮法師<rt>じゃくれんほうし</rt></ruby>", upperPlain: "村雨の 露もまだひぬ 槇の葉に", lowerPlain: "霧立ちのぼる 秋の夕ぐれ", lowerKana: "きりたちのぼる あきのゆふぐれ", upperKana: "むらさめの つゆもまだひぬ まきのはに", trans: "にわか雨の残した露も乾いていないヒノキの葉に、霧が立ちのぼっていく寂しい秋の夕暮れであるよ。", technique: "一字決まり（む）", category: "season" },
+      { id: 88, kimariji: "なにわえ", upper: "難波江の 芦のかりねの ひと夜ゆゑ", lower: "身を尽くしてや 恋ひわたるべき", author: "<ruby>皇嘉門院別当<rt>こうかもんいんのべっとう</rt></ruby>", upperPlain: "難波江の 芦のかりねの ひと夜ゆゑ", lowerPlain: "身を尽くしてや 恋ひわたるべき", lowerKana: "みをつくしてや こひわたるべき", upperKana: "なにわえの あしのかりねの ひとよゆえ", trans: "難波江の芦の刈り根（仮寝）のようなたった一夜の逢瀬のために、私は一生身を滅ぼすほど恋し続けるのでしょうか。", technique: "掛詞（刈根/仮寝）", category: "love" },
+{ id: 89, kimariji: "たま", upper: "玉の緒よ 絶えなば絶えね 長らえば", lower: "忍ぶることの 弱りもぞする", author: "<ruby>式子内親王<rt>しょくしのないしんのう</rt></ruby>", upperPlain: "玉の緒よ 絶えなば絶えね 長らえば", lowerPlain: "忍ぶることの 弱りもぞする", lowerKana: "しのぶることの よはりもぞする", upperKana: "たまのおよ たえなばたえね ながらえば", trans: "私の命よ、切れるなら切れておくれ。生き永らえれば隠している恋心が弱まって溢れ出てしまいそうだから。", technique: "比喩", category: "love" },
+      { id: 90, kimariji: "みせ", upper: "見せばやな 雄島の海人の 袖だにも", lower: "濡れにぞ濡れし 色は変わらず", author: "<ruby>殷富門院大輔<rt>いんぷもんいんのたいふ</rt></ruby>", upperPlain: "見せばやな 雄島の海人の 袖だにも", lowerPlain: "濡れにぞ濡れし 色は変わらず", lowerKana: "ぬれにぞぬれし いろはかはらず", upperKana: "みせばやな おじまのあまの そでだにも", trans: "お見せしたいものですね。雄島の漁師の袖でさえ涙で濡れても色は変わりませんが、私の血の涙で染まった袖を。", technique: "誇張表現", category: "love" },
+      { id: 91, kimariji: "きり", upper: "きりぎりす 鳴くや霜夜の さむしろに", lower: "衣かたしき ひとりかも寝む", author: "<ruby>後京極摂政前太政大臣<rt>ごきょうごくせっしょうさきのだいじょうだいじん</rt></ruby>", upperPlain: "きりぎりす 鳴くや霜夜の さむしろに", lowerPlain: "衣かたしき ひとりかも寝む", lowerKana: "ころもかたしき ひとりかもねむ", upperKana: "きりぎりす なくやしもよの さむしろに", trans: "コオロギが鳴く霜の降る寒い夜に、着物の片袖を敷いて私はたった一人で寝るのだろうか。", technique: "視覚と聴覚の描写", category: "season" },
+      { id: 92, kimariji: "わがそ", upper: "わが袖は 潮干に見えぬ 沖の石の", lower: "人こそ知らね 乾く間もなし", author: "<ruby>二条院讃岐<rt>にじょういんのさぬき</rt></ruby>", upperPlain: "わが袖は 潮干に見えぬ 沖の石の", lowerPlain: "人こそ知らね 乾く間もなし", lowerKana: "ひとこそしらね かわくまもなし", upperKana: "わがそでは しおひにみえぬ おきのいしの", trans: "私の袖は引き潮の時にも見えない沖の石のように、人は知りませんが涙で乾く暇もありません。", technique: "比喩", category: "love" },
+      { id: 93, kimariji: "よのなかは", upper: "世の中は 常にもがもな なぎさ漕ぐ", lower: "海人の小舟の 綱手かなしも", author: "<ruby>鎌倉右大臣<rt>かまくらうだいじん</rt></ruby>", upperPlain: "世の中は 常にもがもな なぎさ漕ぐ", lowerPlain: "海人の小舟の 綱手かなしも", lowerKana: "あまのをぶねの つなでかなしも", upperKana: "よのなかは つねにもがもな なぎさこぐ", trans: "この世はいつも変わらずあってほしいものだ。渚を漕ぐ漁師の小舟が綱で引かれている日常の風情も愛おしい。", technique: "写実的・日常美", category: "misc" },
+      { id: 94, kimariji: "みよ", upper: "み吉野の 山の秋風 小夜ふけて", lower: "ふるさと寒く 衣うつなり", author: "<ruby>参議雅経<rt>さんぎまさつね</rt></ruby>", upperPlain: "み吉野の 山の秋風 小夜ふけて", lowerPlain: "ふるさと寒く 衣うつなり", lowerKana: "ふるさとさむく ころもうつなり", upperKana: "みよしのの やまのあきかぜ さよふけて", trans: "吉野の山の秋風が吹き夜が更けて、古い都の吉野の里は寒く、衣を打つ砧（きぬた）の音が響いている。", technique: "聴覚的描写", category: "season" },
+      { id: 95, kimariji: "おほけ", upper: "<ruby>大<rt>おほ</rt></ruby>けなくぞ 浮世の民に おおうかな", lower: "わが立つ杣に 墨染の袖", author: "<ruby>前大僧正慈円<rt>さきのだいそうじょうじえん</rt></ruby>", upperPlain: "大けなくぞ 浮世の民に おおうかな", lowerPlain: "わが立つ杣に 墨染の袖", lowerKana: "わがたつそまに すみぞめのそで", upperKana: "おほけなくぞ うきよのたみに おほふかな", trans: "身の程知らずにも辛い世の中の人々を包み込もう。比叡山に住み始めた私の黒い僧衣の袖で。", technique: "慈悲の心", category: "misc" },
+      { id: 96, kimariji: "はなさ", upper: "花さそう 嵐の庭の 雪ならで", lower: "ふりゆくものは わが身なりけり", author: "<ruby>入道前太政大臣<rt>にゅうどうさきのだいじょうだいじん</rt></ruby>", upperPlain: "花さそう 嵐の庭の 雪ならで", lowerPlain: "ふりゆくものは わが身なりけり", lowerKana: "ふりゆくものは わがみなりけり", upperKana: "はなさそう あらしのにわの ゆきならで", trans: "花を誘って吹き散らす嵐の庭に降るのは雪ではなく、年老いて「古り（降り）」ゆく私自身の身であったよ。", technique: "掛詞", category: "season" },
+      { id: 97, kimariji: "こぬ", upper: "来ぬ人を 待つの浦の 夕なぎに", lower: "焼くや藻塩の 身もこがれつつ", author: "<ruby>権中納言定家<rt>ごんちゅうなごんていか</rt></ruby>", upperPlain: "来ぬ人を 待つの浦の 夕なぎに", lowerPlain: "焼くや藻塩の 身もこがれつつ", lowerKana: "やくやもしほの みもこがれつつ", upperKana: "こぬひとを まつのうらの ゆふなぎに", trans: "来ない人を待つ松の浦の夕なぎの時に焼いている藻塩のように、私の身も恋心に焦がれ続けている。", technique: "掛詞", category: "love" },
+      { id: 98, kimariji: "かぜそ", upper: "風そよぐ 楢の小川の 夕ぐれは", lower: "みそぎぞ夏の しるしなりける", author: "<ruby>従二位家隆<rt>じゅにいいえたか</rt></ruby>", upperPlain: "風そよぐ 楢の小川の 夕ぐれは", lowerPlain: "みそぎぞ夏の しるしなりける", lowerKana: "みそぎぞなつの しるしなりける", upperKana: "かぜそよぐ ならのおがわの ゆうぐれは", trans: "風がそよぐ楢の小川の夕暮れはすっかり秋の涼しさだが、禊（みそぎ）の神事だけがわずかに夏の証拠なのだなあ。", technique: "季節の推移", category: "season" },
+      { id: 99, kimariji: "ひとを", upper: "人をも恨み 人をも恨みじ あじきなく", lower: "世を思うゆえに 痛むわが身は", author: "<ruby>後鳥羽院<rt>ごとばいん</rt></ruby>", upperPlain: "人をも恨み 人をも恨みじ あじきなく", lowerPlain: "世を思うゆえに 痛むわが身は", lowerKana: "よをおもふゆへに いたむわがみは", upperKana: "ひとをもうらみ ひとをもうらみじ あじきなく", trans: "世の中も人も恨むまい。この世を思い通りにならないものと思うがゆえに、心が痛む私の身なのだから。", technique: "述懐", category: "misc" },
+      { id: 100, kimariji: "もも", upper: "<ruby>百敷<rt>ももしき</rt></ruby>や <ruby>古<rt>ふる</rt></ruby>き<ruby>軒ば<rt>のきば</rt></ruby>の しのぶにも", lower: "なおあまりある 昔なりけり", author: "<ruby>順徳院<rt>じゅんとくいん</rt></ruby>", upperPlain: "百敷や 古き軒ばの しのぶにも", lowerPlain: "なおあまりある 昔なりけり", lowerKana: "なほあまりある むかしなりけり", upperKana: "ももしきや ふるきのきばの しのぶにも", trans: "宮殿の古い軒端に生えるシノブグサを見るにつけても、いくら偲んでも偲びきれないのは繁栄していた昔の御世であるよ。", technique: "掛詞", category: "misc" }    ];
+
+    /* アプリ状態 */
+    let isAudioEnabled = true;
+
+    let currentConfig = {
+      gameMode: 'cpu',
+      cpuLevel: 0,
+      theme: 'all',
+      cardCount: 6
+    };
+
+    let gameState = {
+      active: false,
+      isCountingDown: false,
+      isTransitioning: false,
+      deck: [],
+      boardCards: [],
+      currentPoem: null,
+      playerScore: 0,
+      cpuScore: 0,
+      takenCount: 0,
+      readingStartTime: 0,
+      cpuTimer: null,
+      countdownTimer: null,
+      nextTurnTimer: null,
+      p1LockTimer: null,
+      p2LockTimer: null,
+      p1Locked: false,
+      p2Locked: false
+    };
+
+    let userStats = {
+      matches: 0,
+      wins: 0,
+      totalReactionTime: 0,
+      takenCardCount: 0,
+      reviewPoemIds: new Set(),
+      unlockedTitles: new Set(['かるた初級者']),
+      equippedTitle: 'かるた初級者'
+    };
+
+    let currentSpeechUtterance = null;
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function toggleAudio() {
+      getAudioContext();
+      isAudioEnabled = !isAudioEnabled;
+      const btn = document.getElementById('audio-toggle-btn');
+      btn.textContent = isAudioEnabled ? "🔊 音声: ON" : "🔇 音声: OFF";
+      if (!isAudioEnabled && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function playSound(type) {
+      if (!isAudioEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'beep-low') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(440, ctx.currentTime);
+          gain.gain.setValueAtTime(0.25, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.18);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.18);
+        } else if (type === 'beep-high') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
+          gain.gain.setValueAtTime(0.4, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.4);
+        } else if (type === 'card-snap') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(300, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.08);
+          gain.gain.setValueAtTime(1, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.08);
+        } else if (type === 'correct') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+          osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.4, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.3);
+        } else if (type === 'foul') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(150, ctx.currentTime);
+          gain.gain.setValueAtTime(0.5, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.25);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function speakText(text) {
+      if (!isAudioEnabled) return;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        currentSpeechUtterance = new SpeechSynthesisUtterance(text);
+        currentSpeechUtterance.lang = 'ja-JP';
+        currentSpeechUtterance.rate = 0.85;
+        currentSpeechUtterance.pitch = 1.0;
+        window.speechSynthesis.speak(currentSpeechUtterance);
+      }
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function clearAllTimers() {
+      if (gameState.cpuTimer) clearTimeout(gameState.cpuTimer);
+      if (gameState.nextTurnTimer) clearTimeout(gameState.nextTurnTimer);
+      if (gameState.countdownTimer) clearInterval(gameState.countdownTimer);
+      if (gameState.p1LockTimer) clearTimeout(gameState.p1LockTimer);
+      if (gameState.p2LockTimer) clearTimeout(gameState.p2LockTimer);
+      
+      gameState.cpuTimer = null;
+      gameState.nextTurnTimer = null;
+      gameState.countdownTimer = null;
+      gameState.p1LockTimer = null;
+      gameState.p2LockTimer = null;
+
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    }
+
+    function switchTab(tabId, btnEl) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      if (btnEl) btnEl.classList.add('active');
+
+      if (tabId === 'dict-tab') {
+        document.getElementById('dict-search').value = '';
+        renderDictionary();
+      }
+      if (tabId === 'review-tab') renderReviewList();
+      if (tabId === 'trophy-tab') renderTrophies();
+    }
+
+    function selectGameMode(mode, el) {
+      currentConfig.gameMode = mode;
+      el.parentElement.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+
+      const cpuGroup = document.getElementById('cpu-level-group');
+      cpuGroup.style.display = mode === 'cpu' ? 'flex' : 'none';
+    }
+
+    function selectCpu(level, el) {
+      currentConfig.cpuLevel = level;
+      el.parentElement.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function selectTheme(themeKey, el) {
+      currentConfig.theme = themeKey;
+      el.parentElement.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function selectCardCount(count, el) {
+      currentConfig.cardCount = count;
+      el.parentElement.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function startGame() {
+      getAudioContext();
+      clearAllTimers();
+
+      let pool = [...POEM_DATABASE];
+      
+      if (currentConfig.theme === 'kimari1') {
+        pool = pool.filter(p => ['む','す','め','ふ','さ','せ','ほ'].includes(p.kimariji));
+      } else if (currentConfig.theme === 'kimari2') {
+        pool = pool.filter(p => p.kimariji.length === 2);
+      } else if (currentConfig.theme === 'love') {
+        pool = pool.filter(p => p.category === 'love');
+      } else if (currentConfig.theme === 'season') {
+        pool = pool.filter(p => p.category === 'season');
+      }
+
+      let matchCardCount = currentConfig.cardCount;
+      if (pool.length < matchCardCount) {
+        alert(`選択テーマの札（${pool.length}首）が指定枚数より少ないため、全${pool.length}首で開始します。`);
+        matchCardCount = pool.length;
+      }
+
+      shuffleArray(pool);
+      
+      gameState.deck = pool.slice(0, matchCardCount).map(p => ({...p, isTaken: false}));
+      gameState.boardCards = shuffleArray([...gameState.deck]);
+      gameState.playerScore = 0;
+      gameState.cpuScore = 0;
+      gameState.takenCount = 0;
+      gameState.active = true;
+      gameState.isCountingDown = true;
+      gameState.isTransitioning = false;
+      gameState.p1Locked = false;
+      gameState.p2Locked = false;
+
+      const playPanel = document.getElementById('play-panel');
+      const p2Zone = document.getElementById('pvp-p2-zone');
+      const p1Zone = document.getElementById('pvp-p1-zone');
+      const cpuContainer = document.getElementById('cpu-container');
+
+      if (currentConfig.gameMode === 'pvp') {
+        p2Zone.style.display = 'flex';
+        p1Zone.style.display = 'flex';
+        cpuContainer.style.display = 'none';
+
+        playPanel.classList.add('pvp-fullscreen');
+        if (playPanel.requestFullscreen) {
+          playPanel.requestFullscreen().catch(err => console.log("Fullscreen request bypassed:", err));
+        }
+      } else {
+        p2Zone.style.display = 'none';
+        p1Zone.style.display = 'none';
+        cpuContainer.style.display = 'flex';
+        playPanel.classList.remove('pvp-fullscreen');
+      }
+
+      document.getElementById('setup-panel').style.display = 'none';
+      playPanel.style.display = 'flex';
+      
+      updateBoardUI();
+      startCountdownSequence();
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        const playPanel = document.getElementById('play-panel');
+        if (playPanel) playPanel.classList.remove('pvp-fullscreen');
+      }
+    });
+
+    function startCountdownSequence() {
+      const overlay = document.getElementById('countdown-overlay');
+      const numEl = document.getElementById('countdown-number');
+      overlay.style.display = 'flex';
+
+      let count = 3;
+      numEl.textContent = count;
+      playSound('beep-low');
+
+      gameState.countdownTimer = setInterval(() => {
+        count--;
+        if (count > 0) {
+          numEl.textContent = count;
+          playSound('beep-low');
+        } else if (count === 0) {
+          numEl.textContent = "スタート！";
+          playSound('beep-high');
+        } else {
+          clearInterval(gameState.countdownTimer);
+          overlay.style.display = 'none';
+          gameState.isCountingDown = false;
+          nextTurn();
+        }
+      }, 1000);
+    }
+
+    function quitGame() {
+      if (confirm("試合を中断して設定画面に戻りますか？")) {
+        clearAllTimers();
+        gameState.active = false;
+        gameState.isCountingDown = false;
+        gameState.isTransitioning = false;
+
+        document.getElementById('countdown-overlay').style.display = 'none';
+
+        const playPanel = document.getElementById('play-panel');
+        playPanel.classList.remove('pvp-fullscreen');
+        if (document.exitFullscreen && document.fullscreenElement) {
+          document.exitFullscreen().catch(e => console.log(e));
+        }
+
+        playPanel.style.display = 'none';
+        document.getElementById('setup-panel').style.display = 'block';
+      }
+    }
+
+    function updateBoardUI() {
+      document.getElementById('player-score').textContent = gameState.playerScore;
+      document.getElementById('cpu-score').textContent = gameState.cpuScore;
+      document.getElementById('p1-score-display').textContent = gameState.playerScore;
+      document.getElementById('p2-score-display').textContent = gameState.cpuScore;
+
+      document.getElementById('game-progress').textContent = `残り: ${gameState.deck.length - gameState.takenCount}/${gameState.deck.length}`;
+
+      if (currentConfig.gameMode === 'pvp') {
+        renderCardSet('p2-cards-board', 2);
+        renderCardSet('p1-cards-board', 1);
+      } else {
+        renderCardSet('cards-board', 1);
+      }
+    }
+
+    function renderCardSet(containerId, playerNum) {
+      const boardEl = document.getElementById(containerId);
+      boardEl.innerHTML = '';
+
+      gameState.boardCards.forEach(poem => {
+        const card = document.createElement('div');
+        card.className = `karuta-card ${poem.isTaken ? 'taken' : ''}`;
+        card.onclick = () => handleCardClick(poem, playerNum);
+
+        const cardText = document.createElement('div');
+        cardText.className = 'card-text';
+        cardText.textContent = poem.lowerKana.replace(/\s+/g, '');
+
+        card.appendChild(cardText);
+        boardEl.appendChild(card);
+      });
+    }
+
+    function nextTurn() {
+      if (!gameState.active) return;
+      
+      if (gameState.p1LockTimer) clearTimeout(gameState.p1LockTimer);
+      if (gameState.p2LockTimer) clearTimeout(gameState.p2LockTimer);
+      gameState.p1Locked = false;
+      gameState.p2Locked = false;
+      gameState.isTransitioning = false;
+
+      if (gameState.takenCount >= gameState.deck.length) {
+        endGame();
+        return;
+      }
+
+      const remaining = gameState.deck.filter(p => !p.isTaken);
+      gameState.currentPoem = remaining[Math.floor(Math.random() * remaining.length)];
+
+      const text = `「 ${gameState.currentPoem.upperPlain} 」`;
+      
+      document.getElementById('reading-area').textContent = text;
+      document.getElementById('p1-reading-area').textContent = text;
+      document.getElementById('p2-reading-area').textContent = text;
+      
+      speakText(gameState.currentPoem.upperKana);
+      gameState.readingStartTime = Date.now();
+
+      if (currentConfig.gameMode === 'cpu') {
+        scheduleCpuResponse();
+      }
+    }
+
+    function scheduleCpuResponse() {
+      if (gameState.cpuTimer) clearTimeout(gameState.cpuTimer);
+
+      const delays = [
+        3800 + Math.random() * 1500,
+        2400 + Math.random() * 1000,
+        1400 + Math.random() * 600,
+        800 + Math.random() * 300
+      ];
+
+      const delay = delays[currentConfig.cpuLevel];
+
+      gameState.cpuTimer = setTimeout(() => {
+        if (!gameState.active || gameState.isCountingDown || gameState.isTransitioning || gameState.currentPoem.isTaken) return;
+
+        gameState.isTransitioning = true;
+        clearAllTimers();
+        playSound('card-snap');
+        gameState.currentPoem.isTaken = true;
+        gameState.cpuScore++;
+        gameState.takenCount++;
+        
+        userStats.reviewPoemIds.add(gameState.currentPoem.id);
+        
+        showToast("CPU GET!", "p2");
+        updateBoardUI();
+        
+        gameState.nextTurnTimer = setTimeout(nextTurn, 500);
+      }, delay);
+    }
+
+    function handleCardClick(poem, playerNum) {
+      if (!gameState.active || gameState.isCountingDown || gameState.isTransitioning || poem.isTaken) return;
+
+      if (playerNum === 1 && gameState.p1Locked) return;
+      if (playerNum === 2 && gameState.p2Locked) return;
+
+      const reactionTime = (Date.now() - gameState.readingStartTime) / 1000;
+
+      if (poem.id === gameState.currentPoem.id) {
+        gameState.isTransitioning = true;
+        clearAllTimers();
+        playSound('card-snap');
+        playSound('correct');
+
+        poem.isTaken = true;
+
+        if (currentConfig.gameMode === 'pvp') {
+          if (playerNum === 1) {
+            gameState.playerScore++;
+            showToast("🔵 P1 GET!", "p1");
+          } else {
+            gameState.cpuScore++;
+            showToast("🔴 P2 GET!", "p2");
+          }
+        } else {
+          gameState.playerScore++;
+          showToast("GET!", "p1");
+        }
+
+        gameState.takenCount++;
+
+        // CPU戦、または対人戦で自分(1P)が取った時だけ個人戦績に記録
+        if (currentConfig.gameMode === 'cpu' || playerNum === 1) {
+          userStats.takenCardCount++;
+          userStats.totalReactionTime += reactionTime;
+        }
+
+        updateBoardUI();
+        gameState.nextTurnTimer = setTimeout(nextTurn, 500);
+      } else {
+        playSound('foul');
+        userStats.reviewPoemIds.add(gameState.currentPoem.id);
+
+        if (playerNum === 1) {
+          gameState.p1Locked = true;
+          const display = currentConfig.gameMode === 'pvp' ? document.getElementById('p1-reading-area') : document.getElementById('reading-area');
+          display.textContent = "⚠️ 1P お手つき！（1秒ロック）";
+          
+          if (gameState.p1LockTimer) clearTimeout(gameState.p1LockTimer);
+          gameState.p1LockTimer = setTimeout(() => {
+            if (gameState.active && !gameState.isTransitioning && gameState.currentPoem) {
+              display.textContent = `「 ${gameState.currentPoem.upperPlain} 」`;
+            }
+            gameState.p1Locked = false;
+          }, 1000);
+        } else {
+          gameState.p2Locked = true;
+          const display = document.getElementById('p2-reading-area');
+          display.textContent = "⚠️ 2P お手つき！（1秒ロック）";
+          
+          if (gameState.p2LockTimer) clearTimeout(gameState.p2LockTimer);
+          gameState.p2LockTimer = setTimeout(() => {
+            if (gameState.active && !gameState.isTransitioning && gameState.currentPoem) {
+              display.textContent = `「 ${gameState.currentPoem.upperPlain} 」`;
+            }
+            gameState.p2Locked = false;
+          }, 1000);
+        }
+      }
+    }
+
+    function showToast(text, typeClass) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `get-toast ${typeClass}`;
+      toast.textContent = text;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 800);
+    }
+
+    function endGame() {
+      clearAllTimers();
+      gameState.active = false;
+      userStats.matches++;
+      
+      const playPanel = document.getElementById('play-panel');
+      playPanel.classList.remove('pvp-fullscreen');
+      if (document.exitFullscreen && document.fullscreenElement) {
+        document.exitFullscreen().catch(e => console.log(e));
+      }
+
+      let winnerText = "";
+      if (currentConfig.gameMode === 'pvp') {
+        if (gameState.playerScore > gameState.cpuScore) winnerText = "🎉 🔵 プレイヤー1（自分）の勝利！";
+        else if (gameState.cpuScore > gameState.playerScore) winnerText = "🎉 🔴 プレイヤー2（相手）の勝利！";
+        else winnerText = "🤝 引き分けです！";
+      } else {
+        let isWin = gameState.playerScore > gameState.cpuScore;
+        if (isWin) userStats.wins++;
+        winnerText = isWin ? "🎉 あなたの勝利です！" : "敗北しました…また挑戦しましょう！";
+      }
+
+      checkTitleUnlocks();
+
+      alert(`【試合終了】\nスコア: P1(${gameState.playerScore}) vs P2/CPU(${gameState.cpuScore})\n\n${winnerText}`);
+
+      document.getElementById('setup-panel').style.display = 'block';
+      playPanel.style.display = 'none';
+    }
+
+    function checkTitleUnlocks() {
+      if (userStats.matches >= 1) userStats.unlockedTitles.add("かるた初級者");
+      if (userStats.wins >= 3) userStats.unlockedTitles.add("かるた三段");
+      if (userStats.wins >= 10) userStats.unlockedTitles.add("百人一首マスター");
+      if (currentConfig.gameMode === 'cpu' && currentConfig.cpuLevel === 3 && gameState.playerScore > gameState.cpuScore) {
+        userStats.unlockedTitles.add("永世名人撃破者");
+      }
+      saveStats();
+    }
+
+    function renderDictionary() {
+      const listEl = document.getElementById('dict-list');
+      listEl.innerHTML = '';
+
+      POEM_DATABASE.forEach(poem => {
+        const item = document.createElement('div');
+        item.className = 'poem-item';
+        item.onclick = () => openPoemModal(poem);
+
+        item.innerHTML = `
+          <div class="poem-header">
+            <span class="poem-number">第 ${poem.id} 番 (${poem.author})</span>
+            <span class="poem-kimariji">決まり字: ${poem.kimariji}</span>
+          </div>
+          <div class="poem-text">${poem.upper} / ${poem.lowerPlain}</div>
+          <div class="poem-translation">${poem.trans}</div>
+        `;
+        listEl.appendChild(item);
+      });
+    }
+
+    function filterDictionary() {
+      const query = document.getElementById('dict-search').value.toLowerCase();
+      const items = document.querySelectorAll('#dict-list .poem-item');
+      
+      POEM_DATABASE.forEach((poem, index) => {
+        if (!items[index]) return;
+        const plainAuthor = poem.author.replace(/<[^>]+>/g, '');
+const text = `${poem.id} ${poem.kimariji} ${poem.upperPlain} ${poem.upperKana} ${poem.lowerPlain} ${poem.lowerKana} ${poem.author} ${plainAuthor}`.toLowerCase();
+        items[index].style.display = text.includes(query) ? 'block' : 'none';
+      });
+    }
+
+    function renderReviewList() {
+      const listEl = document.getElementById('review-list');
+      listEl.innerHTML = '';
+
+      if (userStats.reviewPoemIds.size === 0) {
+        listEl.innerHTML = '<p style="text-align:center; color:#888; padding:20px;">苦手札はありません。素晴らしい集中力です！</p>';
+        return;
+      }
+
+      userStats.reviewPoemIds.forEach(id => {
+        const poem = POEM_DATABASE.find(p => p.id === id);
+        if (!poem) return;
+
+        const item = document.createElement('div');
+        item.className = 'poem-item';
+        item.onclick = () => openPoemModal(poem);
+
+        item.innerHTML = `
+          <div class="poem-header">
+            <span class="poem-number">第 ${poem.id} 番 (${poem.author})</span>
+            <span class="poem-kimariji">決まり字: ${poem.kimariji}</span>
+          </div>
+          <div class="poem-text">${poem.upper} / ${poem.lowerPlain}</div>
+          <div class="poem-translation">${poem.trans}</div>
+        `;
+        listEl.appendChild(item);
+      });
+    }
+
+    function clearReviewList() {
+      if (userStats.reviewPoemIds.size === 0) return;
+      if (confirm("苦手札ノートをクリアしますか？")) {
+        userStats.reviewPoemIds.clear();
+        saveStats();
+        renderReviewList();
+      }
+    }
+
+    function renderTrophies() {
+      document.getElementById('stat-matches').textContent = userStats.matches;
+      document.getElementById('stat-wins').textContent = userStats.wins;
+      const avg = userStats.takenCardCount > 0 ? (userStats.totalReactionTime / userStats.takenCardCount).toFixed(2) : "0.00";
+      document.getElementById('stat-avg-speed').textContent = avg;
+
+      const titlesGrid = document.getElementById('titles-grid');
+      titlesGrid.innerHTML = '';
+
+      const allTitles = [
+        { name: "かるた初級者", cond: "初回プレイで獲得" },
+        { name: "かるた三段", cond: "通算3勝達成" },
+        { name: "百人一首マスター", cond: "通算10勝達成" },
+        { name: "永世名人撃破者", cond: "鬼級（永世名人）のCPUに勝利" }
+      ];
+
+      allTitles.forEach(t => {
+        const isUnlocked = userStats.unlockedTitles.has(t.name);
+        const card = document.createElement('div');
+        card.className = `option-card ${userStats.equippedTitle === t.name ? 'selected' : ''}`;
+        card.style.opacity = isUnlocked ? '1' : '0.4';
+        
+        card.innerHTML = `
+          <div>${t.name}</div>
+          <small style="font-size:0.7rem; color:#666;">${isUnlocked ? '獲得済み' : t.cond}</small>
+        `;
+
+        if (isUnlocked) {
+          card.onclick = () => {
+            userStats.equippedTitle = t.name;
+            document.getElementById('current-title-badge').textContent = t.name;
+            renderTrophies();
+            saveStats();
+          };
+        }
+
+        titlesGrid.appendChild(card);
+      });
+    }
+
+    function openPoemModal(poem) {
+      const modalBody = document.getElementById('modal-body');
+      modalBody.innerHTML = `
+        <h2 style="color:var(--primary-color); border-bottom:2px solid var(--accent-color); padding-bottom:5px; margin-bottom:15px; font-size:1.2rem;">
+          第 ${poem.id} 番 （<ruby>作者<rt>さくしゃ</rt></ruby>: ${poem.author}）
+        </h2>
+        <p style="font-size:1.15rem; font-weight:bold; margin-bottom:12px; line-height:1.8;">
+          【<ruby>上<rt>うえ</rt></ruby>の<ruby>句<rt>く</rt></ruby>】 ${poem.upper}<br>
+          【<ruby>下<rt>した</rt></ruby>の<ruby>句<rt>く</rt></ruby>】 ${poem.lowerPlain} （${poem.lowerKana}）
+        </p>
+        <p style="background:#f7f3e8; padding:10px; border-radius:6px; margin-bottom:12px; font-family:'Zen Maru Gothic';">
+          <strong><ruby>決<rt>き</rt></ruby>まり<ruby>字<rt>じ</rt></ruby>:</strong> <span style="color:#d32f2f; font-weight:bold; font-size:1.1rem;">${poem.kimariji}</span>
+        </p>
+        <p style="margin-bottom:12px; line-height:1.7;">
+          <strong><ruby>現代語訳<rt>げんだいごやく</rt></ruby>:</strong><br>${poem.trans}
+        </p>
+        <p style="margin-bottom:10px; color:#444; font-size:0.92rem; line-height:1.6;">
+          <strong><ruby>表現技法<rt>ひょうげんぎほう</rt></ruby>・<ruby>解説<rt>かいせつ</rt></ruby>:</strong><br>${poem.technique}
+        </p>
+      `;
+      document.getElementById('poem-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('poem-modal').classList.remove('active');
+    }
+
+    function saveStats() {
+      const data = {
+        matches: userStats.matches,
+        wins: userStats.wins,
+        totalReactionTime: userStats.totalReactionTime,
+        takenCardCount: userStats.takenCardCount,
+        reviewPoemIds: Array.from(userStats.reviewPoemIds),
+        unlockedTitles: Array.from(userStats.unlockedTitles),
+        equippedTitle: userStats.equippedTitle
+      };
+      localStorage.setItem('hyakunin_isshu_stats', JSON.stringify(data));
+    }
+
+    function loadStats() {
+      const saved = localStorage.getItem('hyakunin_isshu_stats');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          userStats.matches = parsed.matches || 0;
+          userStats.wins = parsed.wins || 0;
+          userStats.totalReactionTime = parsed.totalReactionTime || 0;
+          userStats.takenCardCount = parsed.takenCardCount || 0;
+          userStats.reviewPoemIds = new Set(parsed.reviewPoemIds || []);
+          userStats.unlockedTitles = new Set(parsed.unlockedTitles || ['かるた初級者']);
+          userStats.equippedTitle = parsed.equippedTitle || 'かるた初級者';
+
+          document.getElementById('current-title-badge').textContent = userStats.equippedTitle;
+        } catch(e) {
+          console.error("データの読み込み失敗", e);
+        }
+      }
+    }
+
+    loadStats();
+  </script>
+</body>
+</html>
